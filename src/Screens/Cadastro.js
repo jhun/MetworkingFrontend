@@ -38,6 +38,7 @@ const Cadastro = (props) => {
         });
     } else {
       console.log("senhas diferentes");
+      props.navigation.navigate("Cadastro Falhou");
     }
   };
 
