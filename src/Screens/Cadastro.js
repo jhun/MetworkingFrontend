@@ -25,19 +25,16 @@ const Cadastro = (props) => {
           password: senha,
         })
         .then((res) => {
-          if (res.status === 201) {
-            console.log("Usuário cadastrado com sucesso.");
+          if (res.status === 200) {
             props.navigation.navigate("Cadastro Sucesso");
           }
         })
         .catch((error) => {
-          if (error.response.data["StatusCode"] === 500) {
-            console.log(error.response);
+          if (error.response["status"] === 400) {
             props.navigation.navigate("Cadastro Falhou");
           }
         });
     } else {
-      console.log("senhas diferentes");
       props.navigation.navigate("Cadastro Falhou");
     }
   };

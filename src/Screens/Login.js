@@ -27,11 +27,8 @@ const Login = (props) => {
         }
       })
       .catch((error) => {
-        if (error.response.data["StatusCode"] === 500) {
-          console.log("E-mail ou senha incorretos.");
-          props.navigation.navigate("Login Falhou");
-        } else if (error.response.data["status"] === 401) {
-          console.log("E-mail ou senha incorretos.");
+        console.log(error.response);
+        if (error.response["status"] === 400) {
           props.navigation.navigate("Login Falhou");
         }
       });
