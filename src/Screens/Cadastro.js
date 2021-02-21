@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Text,
   TextInput,
@@ -11,22 +11,50 @@ import {
 import api from "../Services/Axios";
 
 const Cadastro = (props) => {
-  const [valueNome, onChangeNome] = React.useState("");
-  const [valueEmail, onChangeEmail] = React.useState("");
-  const [valueSenha, onChangeSenha] = React.useState("");
+  const [valueNome, onChangeNome] = useState("");
+  const [valueEmail, onChangeEmail] = useState("");
+  const [valueDescription, onChangeDescription] = useState("");
+  const [valueCompany, onChangeCompany] = useState("");
+  const [valueRole, onChangeRole] = useState("");
+  const [valueSenha, onChangeSenha] = useState("");
   const [valueSenhaCofirmar, onChangeSenhaConfirmar] = React.useState("");
 
-  const userCadastrar = (nome, email, senha, senhaConfirmar) => {
+  const userCadastrar = (
+    nome,
+    email,
+    description,
+    company,
+    role,
+    senha,
+    senhaConfirmar
+  ) => {
     if (senha === senhaConfirmar) {
       api
         .post("/api/v1/User", {
           name: nome,
           email: email,
+          description: description,
+          company: company,
+          role: role,
           password: senha,
         })
         .then((res) => {
           if (res.status === 200) {
-            props.navigation.navigate("Cadastro Sucesso");
+            api
+              .put(`/api/v1/User/${res.data.data.id}/UpdateImage`, {
+                imageUrl:
+                  "https://livestreaming-demobucket-1tv84b35cym3j.s3.amazonaws.com/pic2.png",
+              })
+              .then((res) => {
+                if (res.status === 200) {
+                  props.navigation.navigate("Cadastro Sucesso");
+                }
+              })
+              .catch((error) => {
+                if (error.response["status"] === 400) {
+                  props.navigation.navigate("Cadastro Sucesso");
+                }
+              });
           }
         })
         .catch((error) => {
@@ -60,6 +88,24 @@ const Cadastro = (props) => {
       />
       <TextInput
         style={styles.input}
+        placeholder="Description"
+        onChangeText={(text) => onChangeDescription(text)}
+        value={valueDescription}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Company"
+        onChangeText={(text) => onChangeCompany(text)}
+        value={valueCompany}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Role"
+        onChangeText={(text) => onChangeRole(text)}
+        value={valueRole}
+      />
+      <TextInput
+        style={styles.input}
         placeholder="Senha"
         secureTextEntry
         onChangeText={(text) => onChangeSenha(text)}
@@ -75,7 +121,15 @@ const Cadastro = (props) => {
       <TouchableOpacity
         style={styles.cadastreseBtn}
         onPress={() =>
-          userCadastrar(valueNome, valueEmail, valueSenha, valueSenhaCofirmar)
+          userCadastrar(
+            valueNome,
+            valueEmail,
+            valueDescription,
+            valueCompany,
+            valueRole,
+            valueSenha,
+            valueSenhaCofirmar
+          )
         }
       >
         <Text style={styles.cadastreseText}>CADASTRAR</Text>
@@ -98,14 +152,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   input: {
-    borderWidth: 0,
-    borderColor: "#fff",
+    borderWidth: 0.1,
+    borderColor: "#222222",
     backgroundColor: "#fff",
     borderRadius: 50,
-    width: "80%",
-    height: 40,
-    marginBottom: 20,
-    padding: 10,
+    width: "70%",
+    marginBottom: 10,
+    padding: 5,
+    paddingRight: 15,
+    paddingLeft: 15,
   },
   loginBtn: {
     backgroundColor: "#fdb839",

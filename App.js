@@ -1,13 +1,23 @@
 // In App.js in a new project
 
 import * as React from "react";
-import { Text, TextInput, View, Button, Image, LogBox } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  Text,
+  TextInput,
+  View,
+  Button,
+  Image,
+  LogBox,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import { NavigationContainer, DrawerActions } from "@react-navigation/native";
 import {
   createStackNavigator,
   TransitionPresets,
   CardStyleInterpolators,
 } from "@react-navigation/stack";
+import { Icon } from "react-native-elements";
 
 import MetworkingHeaderLogo from "./src/Components/MetworkingHeaderLogo";
 
@@ -17,8 +27,10 @@ import LoginFail from "./src/Screens/LoginFail";
 import Cadastro from "./src/Screens/Cadastro";
 import CadastroSuccess from "./src/Screens/CadastroSuccess";
 import CadastroFail from "./src/Screens/CadastroFail";
-
+import CadastroUpdated from "./src/Screens/CadastroUpdated";
+import CadastroUpdateFail from "./src/Screens/CadastroUpdateFail";
 import Timeline from "./src/Screens/Timeline";
+import Profile from "./src/Screens/Profile";
 
 LogBox.ignoreLogs(["Remote debugger"]);
 
@@ -141,25 +153,58 @@ function App() {
             headerRight: () => <MetworkingHeaderLogo />,
           }}
         />
-
         <Stack.Screen
-          name="Timeline"
-          component={Timeline}
+          name="Cadastro Atualizado"
+          component={CadastroUpdated}
           options={{
             headerRight: () => <MetworkingHeaderLogo />,
           }}
         />
-
-        {/* <Stack.Screen
-          name="CreatePost"
-          component={CreatePostScreen}
-          options={({ route }) => ({
-            title: route.params.name,
+        <Stack.Screen
+          name="Atualização Cadastro Falhou"
+          component={CadastroUpdateFail}
+          options={{
+            headerRight: () => <MetworkingHeaderLogo />,
+          }}
+        />
+        <Stack.Screen
+          name="Timeline"
+          component={Timeline}
+          options={({ navigation, route }) => ({
+            headerTitle: (props) => <MetworkingHeaderLogo />,
+            headerRight: (props) => (
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.dispatch(DrawerActions.toggleDrawer())
+                }
+              >
+                <Icon
+                  name="menu"
+                  type="material"
+                  size={26}
+                  color="#ffffff"
+                  style={styles.menu}
+                />
+              </TouchableOpacity>
+            ),
           })}
-        /> */}
+        />
+        <Stack.Screen
+          name="Mate"
+          component={Profile}
+          options={{
+            headerRight: () => <MetworkingHeaderLogo />,
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  menu: {
+    marginRight: 15,
+  },
+});
 
 export default App;

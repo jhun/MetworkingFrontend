@@ -23,7 +23,19 @@ const Login = (props) => {
       .then((res) => {
         if (res.status === 200) {
           console.log("logado");
-          props.navigation.navigate("Timeline");
+          // console.log(res.data.data.userId);
+
+          props.navigation.reset({
+            index: 0,
+            routes: [
+              {
+                name: "Timeline",
+                params: {
+                  user: res.data.data.userId,
+                },
+              },
+            ],
+          });
         }
       })
       .catch((error) => {
