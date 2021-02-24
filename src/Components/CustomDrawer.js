@@ -58,10 +58,11 @@ const CustomDrawer = (props) => {
 const styles = StyleSheet.create({
   sideMenuProfileIcon: {
     resizeMode: "center",
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     borderRadius: 100,
     alignSelf: "center",
+    resizeMode: "cover",
     marginTop: 30,
   },
 });

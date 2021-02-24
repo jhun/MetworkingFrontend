@@ -13,6 +13,13 @@ import LoadTimeline from "./LoadTimeline";
 import CustomDrawer from "../Components/CustomDrawer";
 import Home from "./Home";
 import MetMe from "./MetMe";
+import Interests from "./Interests";
+import Metworking from "./Metworking";
+import Solicitacoes from "./Solicitacoes";
+import SolicitacoesEnviadas from "./SolicitacoesEnviadas";
+import MetMapa from "./MetMapa";
+import Boost from "./Boost";
+
 import api from "../Services/Axios";
 
 const Drawer = createDrawerNavigator();
@@ -37,7 +44,7 @@ const Timeline = (props, { route, navigation }) => {
         component={MetMe}
         initialParams={{ user: user }}
         options={{
-          drawerLabel: "Me",
+          drawerLabel: "Perfil",
           drawerIcon: () => (
             <Icon
               size={22}
@@ -49,11 +56,27 @@ const Timeline = (props, { route, navigation }) => {
         }}
       />
       <Drawer.Screen
+        name="Interests"
+        component={Interests}
+        initialParams={{ user: user }}
+        options={{
+          drawerLabel: "Meus Interesses",
+          drawerIcon: () => (
+            <Icon
+              size={22}
+              name="playlist-add-check"
+              type="material"
+              color="#ffffff"
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="Met Timeline"
         component={LoadTimeline}
         initialParams={{ user: user, navigation }}
         options={{
-          drawerLabel: "Met Timeline",
+          drawerLabel: "Linha do tempo",
           drawerIcon: () => (
             <Icon
               size={22}
@@ -66,19 +89,38 @@ const Timeline = (props, { route, navigation }) => {
       />
       <Drawer.Screen
         name="My Metworking"
-        component={LoadTimeline}
+        component={Metworking}
+        initialParams={{ user: user, navigation }}
         options={{
-          drawerLabel: "My Metworking",
+          drawerLabel: "Meu Metworking",
           drawerIcon: () => (
             <Icon size={22} name="bolt" type="material" color="#ffffff" />
           ),
         }}
       />
       <Drawer.Screen
-        name="Met Adds"
-        component={LoadTimeline}
+        name="Met Received"
+        component={Solicitacoes}
+        initialParams={{ user: user, navigation }}
         options={{
-          drawerLabel: "Met Adds",
+          drawerLabel: "Solicitações Recebidas",
+          drawerIcon: () => (
+            <Icon
+              size={22}
+              name="add-comment"
+              type="material"
+              color="#ffffff"
+            />
+          ),
+        }}
+      />
+
+      <Drawer.Screen
+        name="Met Sent"
+        component={SolicitacoesEnviadas}
+        initialParams={{ user: user, navigation }}
+        options={{
+          drawerLabel: "Solicitações Enviadas",
           drawerIcon: () => (
             <Icon
               size={22}
@@ -92,9 +134,9 @@ const Timeline = (props, { route, navigation }) => {
 
       <Drawer.Screen
         name="Met Map"
-        component={LoadTimeline}
+        component={MetMapa}
         options={{
-          drawerLabel: "Met Map",
+          drawerLabel: "Met Mapa",
           drawerIcon: () => (
             <Icon
               size={22}
@@ -107,7 +149,7 @@ const Timeline = (props, { route, navigation }) => {
       />
       <Drawer.Screen
         name="Met Boosts"
-        component={LoadTimeline}
+        component={Boost}
         options={{
           drawerLabel: "Met Boosts",
           drawerIcon: () => (
@@ -122,9 +164,9 @@ const Timeline = (props, { route, navigation }) => {
       />
       <Drawer.Screen
         name="Settings"
-        component={LoadTimeline}
+        component={Boost}
         options={{
-          drawerLabel: "Settings",
+          drawerLabel: "Configurações",
           drawerIcon: () => (
             <Icon size={22} name="settings" type="material" color="#ffffff" />
           ),
@@ -134,7 +176,7 @@ const Timeline = (props, { route, navigation }) => {
         name="Logout"
         component={Home}
         options={{
-          drawerLabel: "Logout",
+          drawerLabel: "Sair",
           drawerIcon: () => (
             <Icon size={22} name="logout" type="material" color="#ffffff" />
           ),

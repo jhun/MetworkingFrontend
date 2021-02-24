@@ -7,18 +7,39 @@ import {
   Dimensions,
   FlatList,
 } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { Card, Icon } from "react-native-elements";
 import api from "../Services/Axios";
+import { apiMatch } from "../Services/Axios";
 
 const screenWidth = (Dimensions.get("window").width * 100) / 100;
 
-const Cartao = ({ mudaStatus, navigation, id, name, role, company, image }) => (
+const Cartao = ({
+  mudaStatus,
+  navigation,
+  idUser,
+  idFriend,
+  name,
+  role,
+  company,
+  image,
+}) => (
   <Card containerStyle={styles.card}>
     <Card.Image style={styles.foto} source={{ uri: image }}></Card.Image>
     <Text style={styles.header}>{name}</Text>
     <Text style={styles.cargo}>{role}</Text>
     <Text style={styles.empresa}>{company}</Text>
-    <TouchableOpacity style={styles.reject}>
+    <TouchableOpacity
+      style={styles.reject}
+      onPress={() => {
+        mudaStatus();
+        console.log("rejeitado");
+        // navigation.navigate("Mate", {
+        //   otherUserId: idFriend,
+        //   userId: idUser,
+        // });
+      }}
+    >
       <Icon size={40} name="close" type="material" color="#cc0088" />
     </TouchableOpacity>
     <TouchableOpacity style={styles.vermais}>
@@ -26,22 +47,41 @@ const Cartao = ({ mudaStatus, navigation, id, name, role, company, image }) => (
         style={styles.vermaisTitle}
         onPress={() => {
           mudaStatus();
-          navigation.navigate("Mate", { otherUserId: id });
+          navigation.navigate("Mate", {
+            otherUserId: idFriend,
+            userId: idUser,
+          });
         }}
       >
         ver perfil
       </Text>
     </TouchableOpacity>
-    <TouchableOpacity style={styles.accept}>
+    <TouchableOpacity
+      style={styles.accept}
+      onPress={() => {
+        apiMatch
+          .post(`/api/v1/PedidoMatch`, {
+            idUserSolicitante: idUser,
+            idUserAprovador: idFriend,
+          })
+          .then(function (response) {
+            mudaStatus();
+            console.log("pedido enviado");
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      }}
+    >
       <Icon size={40} name="bolt" type="material" color="#ffcc33" />
     </TouchableOpacity>
   </Card>
 );
 
 const LoadTimeline = (props) => {
+  const isFocused = useIsFocused();
   const [isStatus, setStatus] = useState(true);
   const changeStatus = () => {
-    console.log("mudando");
     setStatus(!isStatus);
   };
   const { user } = props.route.params;
@@ -50,7 +90,8 @@ const LoadTimeline = (props) => {
     <Cartao
       mudaStatus={changeStatus}
       navigation={props.navigation}
-      id={item.id}
+      idUser={user}
+      idFriend={item.id}
       name={item.name}
       role={item.role}
       company={item.company}
@@ -59,19 +100,132 @@ const LoadTimeline = (props) => {
   );
 
   useEffect(() => {
+    console.log("###################################");
     api
       .get("/api/v1/User")
       .then(function (response) {
+        console.log("Tem lista geral");
         let list = response.data.data;
-        var lists = list.filter((x) => {
-          return x.id != user;
-        });
-        setListaUsuarios(lists);
+        let listCleanUser;
+        apiMatch
+          .get(`/api/v1/Match/${user}`)
+          .then(function (response) {
+            console.log("Tem Match");
+            let listFriends = response.data.data.matches;
+            listCleanUser = list.filter((x) => {
+              return x.id != user;
+            });
+            for (let i = 0; i < listFriends.length; i++) {
+              listCleanUser = listCleanUser.filter((x) => {
+                return x.id != listFriends[i].idAmigo;
+              });
+            }
+            apiMatch
+              .get(`/api/v1/PedidoMatch/enviados/${user}`)
+              .then(function (response) {
+                console.log("Tem pedidos enviados");
+                let listUsersInvited = response.data.data.pedidos;
+                for (let i = 0; i < listUsersInvited.length; i++) {
+                  listCleanUser = listCleanUser.filter((x) => {
+                    return x.id != listUsersInvited[i].idUser;
+                  });
+                }
+                apiMatch
+                  .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                  .then(function (response) {
+                    console.log("Tem pedidos recebidos");
+                    let listUsersReceived = response.data.data.pedidos;
+                    for (let i = 0; i < listUsersReceived.length; i++) {
+                      listCleanUser = listCleanUser.filter((x) => {
+                        return x.id != listUsersReceived[i].idUser;
+                      });
+                    }
+                    setListaUsuarios(listCleanUser);
+                  })
+                  .catch(function (error) {
+                    console.log("Não tem pedidos recebidos");
+                    setListaUsuarios(listCleanUser);
+                  });
+              })
+              .catch(function (error) {
+                console.log("Não tem pedidos enviados");
+                apiMatch
+                  .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                  .then(function (response) {
+                    console.log("Tem Pedidos recebidos");
+                    let listUsersReceived = response.data.data.pedidos;
+                    for (let i = 0; i < listUsersReceived.length; i++) {
+                      listCleanUser = listCleanUser.filter((x) => {
+                        return x.id != listUsersReceived[i].idUser;
+                      });
+                    }
+                    setListaUsuarios(listCleanUser);
+                  })
+                  .catch(function (error) {
+                    console.log("Não tem Pedidos recebidos");
+                    setListaUsuarios(listCleanUser);
+                  });
+              });
+          })
+          .catch(function (error) {
+            console.log("Não tem Match");
+            listCleanUser = list.filter((x) => {
+              return x.id != user;
+            });
+            apiMatch
+              .get(`/api/v1/PedidoMatch/enviados/${user}`)
+              .then(function (response) {
+                console.log("Tem pedidos enviados");
+                let listUsersInvited = response.data.data.pedidos;
+                for (let i = 0; i < listUsersInvited.length; i++) {
+                  listCleanUser = listCleanUser.filter((x) => {
+                    return x.id != listUsersInvited[i].idUser;
+                  });
+                }
+                apiMatch
+                  .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                  .then(function (response) {
+                    console.log("Tem pedidos recebidos");
+                    let listUsersReceived = response.data.data.pedidos;
+                    for (let i = 0; i < listUsersReceived.length; i++) {
+                      listCleanUser = listCleanUser.filter((x) => {
+                        return x.id != listUsersReceived[i].idUser;
+                      });
+                    }
+                    setListaUsuarios(listCleanUser);
+                  })
+                  .catch(function (error) {
+                    console.log("Não Tem pedidos recebidos");
+                    setListaUsuarios(listCleanUser);
+                  });
+              })
+              .catch(function (error) {
+                console.log("Não tem pedidos enviados");
+                // console.log(error.response.data.errors.data);
+                apiMatch
+                  .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                  .then(function (response) {
+                    console.log("Tem pedidos recebidos");
+                    let listUsersReceived = response.data.data.pedidos;
+                    for (let i = 0; i < listUsersReceived.length; i++) {
+                      listCleanUser = listCleanUser.filter((x) => {
+                        return x.id != listUsersReceived[i].idUser;
+                      });
+                    }
+                    setListaUsuarios(listCleanUser);
+                  })
+                  .catch(function (error) {
+                    console.log("Não Tem pedidos recebidos");
+                    // console.log(error.response.data.errors.data);
+                    setListaUsuarios(listCleanUser);
+                  });
+              });
+          });
       })
       .catch(function (error) {
-        console.log(error);
+        console.log("Não tem lista geral");
       });
-  }, [isStatus]);
+  }, [isFocused, isStatus]);
 
   return (
     <SafeAreaView style={styles.container}>
