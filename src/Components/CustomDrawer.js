@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Text, Image, StyleSheet, SafeAreaView } from "react-native";
 import {
   DrawerContentScrollView,
   DrawerItemList,
+  DrawerItem,
 } from "@react-navigation/drawer";
+import { Icon } from "react-native-elements";
 import api from "../Services/Axios";
+import AuthContext from "../Store/Auth";
 
 const CustomDrawer = (props) => {
-  const user = props.user;
+  const { Logout, user } = useContext(AuthContext);
   const [pic, setPic] = useState(
     "https://livestreaming-demobucket-1tv84b35cym3j.s3.amazonaws.com/pic.png"
   );
@@ -41,6 +44,20 @@ const CustomDrawer = (props) => {
       </Text>
       <DrawerContentScrollView {...props}>
         <DrawerItemList {...props} />
+        <DrawerItem
+          label="sair"
+          onPress={() => Logout()}
+          icon={() => (
+            <Icon size={22} name="logout" type="material" color="#ffffff" />
+          )}
+          labelStyle={{
+            fontSize: 10,
+            color: "#ffffff",
+            textAlign: "left",
+            textTransform: "uppercase",
+            marginLeft: -20,
+          }}
+        />
       </DrawerContentScrollView>
       <Text
         style={{

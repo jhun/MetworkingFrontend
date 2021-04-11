@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Text,
   TextInput,
@@ -19,13 +19,12 @@ import Solicitacoes from "./Solicitacoes";
 import SolicitacoesEnviadas from "./SolicitacoesEnviadas";
 import MetMapa from "./MetMapa";
 import Boost from "./Boost";
-
-import api from "../Services/Axios";
+import AuthContext from "../Store/Auth";
 
 const Drawer = createDrawerNavigator();
 
 const Timeline = (props, { route, navigation }) => {
-  const { user } = props.route.params;
+  const { user } = useContext(AuthContext);
   return (
     <Drawer.Navigator
       initialRouteName="Met Timeline"
@@ -172,7 +171,7 @@ const Timeline = (props, { route, navigation }) => {
           ),
         }}
       />
-      <Drawer.Screen
+      {/* <Drawer.Screen
         name="Logout"
         component={Home}
         options={{
@@ -181,7 +180,7 @@ const Timeline = (props, { route, navigation }) => {
             <Icon size={22} name="logout" type="material" color="#ffffff" />
           ),
         }}
-      />
+      /> */}
     </Drawer.Navigator>
   );
 };
@@ -197,7 +196,7 @@ const styles = StyleSheet.create({
   listItemLabel: {
     width: "150%",
     fontSize: 10,
-    fontWeight: "normal",
+    fontWeight: "fontnormal",
     color: "#ffffff",
     textAlign: "left",
     textTransform: "uppercase",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   Text,
   TextInput,
@@ -8,11 +8,18 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import api from "../Services/Axios";
 
-const Login = (props) => {
+import AuthContext from "../Store/Auth";
+
+const Login = () => {
   const [valueEmail, onChangeEmail] = useState("");
   const [valueSenha, onChangeSenha] = useState("");
+
+  const { Login, user, setUser } = useContext(AuthContext);
 
   const userLogin = (email, senha) => {
     api
@@ -20,22 +27,13 @@ const Login = (props) => {
         userEmail: email,
         password: senha,
       })
-      .then((res) => {
+      .then(async (res) => {
         if (res.status === 200) {
           console.log("logado");
-          // console.log(res.data.data.userId);
-
-          props.navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: "Timeline",
-                params: {
-                  user: res.data.data.userId,
-                },
-              },
-            ],
-          });
+          setUser(res.data.data.userId);
+          console.log("usuario: ", res.data.data.userId);
+          Login(res.data.data.userId);
+          // props.navigation.navigate("Timeline", { user: res.data.data.userId });
         }
       })
       .catch((error) => {
