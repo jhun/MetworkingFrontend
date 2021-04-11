@@ -70,41 +70,49 @@ const SolicitacoesEnviadas = (props, { navigation }) => {
   );
 
   useEffect(() => {
+    let isMounted = true;
     api
       .get("/api/v1/User")
       .then(function (response) {
-        console.log("Tem lista geral");
-        let list = response.data.data;
-        apiMatch
-          .get(`/api/v1/PedidoMatch/enviados/${user}`)
-          .then(function (response) {
-            // console.log(response.data.data);
-            console.log("tem pedido solicitacao enviado");
-            let listFriends = response.data.data.pedidos;
-            let listCleanUser = list.filter((x) => {
-              return x.id != user;
-            });
+        if (isMounted) {
+          console.log("Tem lista geral");
+          let list = response.data.data;
+          apiMatch
+            .get(`/api/v1/PedidoMatch/enviados/${user}`)
+            .then(function (response) {
+              if (isMounted) {
+                // console.log(response.data.data);
+                console.log("tem pedido solicitacao enviado");
+                let listFriends = response.data.data.pedidos;
+                let listCleanUser = list.filter((x) => {
+                  return x.id != user;
+                });
 
-            listCleanUser = listCleanUser.filter((x) => {
-              for (let i = 0; i < listFriends.length; i++) {
-                if (x.id == listFriends[i].idUser) {
-                  return true;
-                }
+                listCleanUser = listCleanUser.filter((x) => {
+                  for (let i = 0; i < listFriends.length; i++) {
+                    if (x.id == listFriends[i].idUser) {
+                      return true;
+                    }
+                  }
+                });
+                setListaUsuarios(listCleanUser);
+                setSolicitacoesPendentes(true);
               }
+            })
+            .catch(function (error) {
+              console.log("Não tem pedido solicitacao enviado");
+              let listCleanUser = {};
+              setListaUsuarios(listCleanUser);
+              setSolicitacoesPendentes(false);
             });
-            setListaUsuarios(listCleanUser);
-            setSolicitacoesPendentes(true);
-          })
-          .catch(function (error) {
-            console.log("Não tem pedido solicitacao enviado");
-            let listCleanUser = {};
-            setListaUsuarios(listCleanUser);
-            setSolicitacoesPendentes(false);
-          });
+        }
       })
       .catch(function (error) {
         console.log("Não tem lista geral");
       });
+    return () => {
+      isMounted = false;
+    };
   }, [isFocused]);
 
   return (

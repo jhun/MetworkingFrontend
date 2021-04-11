@@ -71,43 +71,51 @@ const Metworking = (props) => {
   );
 
   useEffect(() => {
+    let isMounted = true;
     api
       .get("/api/v1/User")
       .then(function (response) {
-        console.log("Tem lista geral");
-        let list = response.data.data;
-        apiMatch
-          .get(`/api/v1/Match/${user}`)
-          .then(function (response) {
-            console.log("Tem Matches");
-            let listFriends = response.data.data.matches;
-            let listCleanUser = list.filter((x) => {
-              return x.id != user;
-            });
+        if (isMounted) {
+          console.log("Tem lista geral");
+          let list = response.data.data;
+          apiMatch
+            .get(`/api/v1/Match/${user}`)
+            .then(function (response) {
+              if (isMounted) {
+                console.log("Tem Matches");
+                let listFriends = response.data.data.matches;
+                let listCleanUser = list.filter((x) => {
+                  return x.id != user;
+                });
 
-            listCleanUser = listCleanUser.filter((y) => {
-              for (let i = 0; i < listFriends.length; i++) {
-                if (y.id == listFriends[i].idAmigo) {
-                  return true;
-                }
+                listCleanUser = listCleanUser.filter((y) => {
+                  for (let i = 0; i < listFriends.length; i++) {
+                    if (y.id == listFriends[i].idAmigo) {
+                      return true;
+                    }
+                  }
+                });
+
+                console.log("#########");
+                console.log(listCleanUser);
+                setListaUsuarios(listCleanUser);
+                setMetEfetivado(true);
               }
+            })
+            .catch(function (error) {
+              console.log("Não tem Matches");
+              let listCleanUser = {};
+              setListaUsuarios(listCleanUser);
+              setMetEfetivado(false);
             });
-
-            console.log("#########");
-            console.log(listCleanUser);
-            setListaUsuarios(listCleanUser);
-            setMetEfetivado(true);
-          })
-          .catch(function (error) {
-            console.log("Não tem Matches");
-            let listCleanUser = {};
-            setListaUsuarios(listCleanUser);
-            setMetEfetivado(false);
-          });
+        }
       })
       .catch(function (error) {
         console.log("Não tem lista geral");
       });
+    return () => {
+      isMounted = false;
+    };
   }, [isFocused]);
 
   return (

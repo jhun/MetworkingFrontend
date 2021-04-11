@@ -19,6 +19,7 @@ import {
 } from "@react-navigation/stack";
 import { Icon } from "react-native-elements";
 
+import LoadingApp from "../Screens/LoadingApp";
 import Home from "../Screens/Home";
 import Login from "../Screens/Login";
 import LoginFail from "../Screens/LoginFail";
@@ -48,8 +49,32 @@ const headerStyle = {
 };
 
 export default function NavigationMetworking() {
-  const { logged } = useContext(AuthContext);
+  const { loading, logged } = useContext(AuthContext);
 
+  const Loading = () => {
+    return (
+      <Stack.Navigator
+        initialRouteName="Home"
+        headerMode="float"
+        animation="fade"
+        screenOptions={{
+          gestureEnabled: true,
+          gestureDirection: "horizontal",
+          cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+          ...headerStyle,
+        }}
+      >
+        <Stack.Screen
+          name="Loading"
+          component={LoadingApp}
+          options={{
+            headerTitle: () => <MetworkingHeaderLogo />,
+            headerRight: () => {},
+          }}
+        />
+      </Stack.Navigator>
+    );
+  };
   const NotLogged = () => {
     return (
       <Stack.Navigator
@@ -171,9 +196,15 @@ export default function NavigationMetworking() {
     );
   };
 
-  return (
-    <NavigationContainer>{logged ? Logged() : NotLogged()}</NavigationContainer>
-  );
+  if (loading) {
+    return <NavigationContainer>{Loading()}</NavigationContainer>;
+  } else {
+    return (
+      <NavigationContainer>
+        {logged ? Logged() : NotLogged()}
+      </NavigationContainer>
+    );
+  }
 }
 
 const styles = StyleSheet.create({

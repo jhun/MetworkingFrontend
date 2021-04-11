@@ -28,17 +28,18 @@ export const AuthProvider = ({ children }) => {
     const checkLogin = async () => {
       const res = await AsyncStorage.getItem("@loggedin");
       if (res !== null) {
+        const userIdStore = await AsyncStorage.getItem("@userId");
+        setUser(JSON.parse(userIdStore));
         setLogged(res);
       } else {
         setLogged(false);
       }
       setLoading(false);
     };
-
     checkLogin();
   }, []);
 
-  const Login = async (userId) => {
+  const LoginMet = async (userId) => {
     await AsyncStorage.setItem("@loggedin", JSON.stringify(true));
     await AsyncStorage.setItem("@userId", JSON.stringify(userId));
     setLogged(true);
@@ -51,7 +52,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ logged, Login, Logout, user, setUser }}>
+    <AuthContext.Provider
+      value={{ loading, logged, LoginMet, Logout, user, setUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

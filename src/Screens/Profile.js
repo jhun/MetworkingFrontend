@@ -116,131 +116,145 @@ const Profile = (props, { route, navigation }) => {
   });
 
   useEffect(() => {
+    let isMounted = true;
     api
       .get(`/api/v1/User/${otherUserId}`)
       .then(function (response) {
-        setName(response.data.data.name);
-        setEmail(response.data.data.email);
-        setDescription(response.data.data.description);
-        setCompany(response.data.data.company);
-        setRole(response.data.data.role);
-        setImage(response.data.data.image);
-        apiMatch
-          .get(`/api/v1/Match/isMatch/${userId}/${otherUserId}`)
-          .then(function (response) {
-            if (response.data.data.isMatch) {
-              setButtonChat(false);
-              setButtonsAccept(true);
-              setButtonsAdd(true);
-              setDisplay("flex");
-            } else {
-              apiMatch
-                .get(`/api/v1/PedidoMatch/enviados/${userId}`)
-                .then(function (response) {
-                  let usuarios = response.data.data.pedidos;
-                  for (let i = 0; i < usuarios.length; i++) {
-                    if (usuarios[i].idUser == otherUserId) {
-                      setButtonChat(true);
-                      setButtonsAccept(true);
-                      setButtonsAdd(true);
-                      iSentInvite = true;
-                      setDisplay("flex");
-                      console.log("i sent");
-                      break;
-                    } else {
+        if (isMounted) {
+          setName(response.data.data.name);
+          setEmail(response.data.data.email);
+          setDescription(response.data.data.description);
+          setCompany(response.data.data.company);
+          setRole(response.data.data.role);
+          setImage(response.data.data.image);
+          apiMatch
+            .get(`/api/v1/Match/isMatch/${userId}/${otherUserId}`)
+            .then(function (response) {
+              if (isMounted) {
+                if (response.data.data.isMatch) {
+                  setButtonChat(false);
+                  setButtonsAccept(true);
+                  setButtonsAdd(true);
+                  setDisplay("flex");
+                } else {
+                  apiMatch
+                    .get(`/api/v1/PedidoMatch/enviados/${userId}`)
+                    .then(function (response) {
+                      if (isMounted) {
+                        let usuarios = response.data.data.pedidos;
+                        for (let i = 0; i < usuarios.length; i++) {
+                          if (usuarios[i].idUser == otherUserId) {
+                            setButtonChat(true);
+                            setButtonsAccept(true);
+                            setButtonsAdd(true);
+                            iSentInvite = true;
+                            setDisplay("flex");
+                            console.log("i sent");
+                            break;
+                          } else {
+                            setButtonChat(true);
+                            setButtonsAccept(true);
+                            setButtonsAdd(false);
+                            iSentInvite = false;
+                            setDisplay("flex");
+                            console.log("i didnt send");
+                          }
+                        }
+                        if (!iSentInvite) {
+                          apiMatch
+                            .get(`/api/v1/PedidoMatch/recebidos/${userId}`)
+                            .then(function (response) {
+                              if (isMounted) {
+                                let usuarios = response.data.data.pedidos;
+                                for (let i = 0; i < usuarios.length; i++) {
+                                  if (usuarios[i].idUser == otherUserId) {
+                                    setButtonChat(true);
+                                    setButtonsAccept(false);
+                                    setButtonsAdd(true);
+                                    iReceivedInvite = true;
+                                    setDisplay("flex");
+                                    console.log("i received");
+                                    break;
+                                  } else {
+                                    setButtonChat(true);
+                                    setButtonsAccept(true);
+                                    setButtonsAdd(false);
+                                    iReceivedInvite = false;
+                                    setDisplay("flex");
+                                    console.log("i didnt receive");
+                                  }
+                                }
+                              }
+                            })
+                            .catch(function (error) {
+                              console.log(error.response.data);
+                              setButtonChat(true);
+                              setButtonsAccept(true);
+                              setButtonsAdd(false);
+                              iReceivedInvite = false;
+                              console.log("i didnt receive");
+                              setDisplay("flex");
+                            });
+                        }
+                      }
+                    })
+                    .catch(function (error) {
                       setButtonChat(true);
                       setButtonsAccept(true);
                       setButtonsAdd(false);
                       iSentInvite = false;
                       setDisplay("flex");
-                      console.log("i didnt send");
-                    }
-                  }
-                  if (!iSentInvite) {
-                    apiMatch
-                      .get(`/api/v1/PedidoMatch/recebidos/${userId}`)
-                      .then(function (response) {
-                        let usuarios = response.data.data.pedidos;
-                        for (let i = 0; i < usuarios.length; i++) {
-                          if (usuarios[i].idUser == otherUserId) {
-                            setButtonChat(true);
-                            setButtonsAccept(false);
-                            setButtonsAdd(true);
-                            iReceivedInvite = true;
-                            setDisplay("flex");
-                            console.log("i received");
-                            break;
-                          } else {
-                            setButtonChat(true);
-                            setButtonsAccept(true);
-                            setButtonsAdd(false);
-                            iReceivedInvite = false;
-                            setDisplay("flex");
-                            console.log("i didnt receive");
-                          }
-                        }
-                      })
-                      .catch(function (error) {
-                        console.log(error.response.data);
-                        setButtonChat(true);
-                        setButtonsAccept(true);
-                        setButtonsAdd(false);
-                        iReceivedInvite = false;
-                        console.log("i didnt receive");
-                        setDisplay("flex");
-                      });
-                  }
-                })
-                .catch(function (error) {
-                  setButtonChat(true);
-                  setButtonsAccept(true);
-                  setButtonsAdd(false);
-                  iSentInvite = false;
-                  setDisplay("flex");
-                  if (!iSentInvite) {
-                    apiMatch
-                      .get(`/api/v1/PedidoMatch/recebidos/${userId}`)
-                      .then(function (response) {
-                        let usuarios = response.data.data.pedidos;
-                        for (let i = 0; i < usuarios.length; i++) {
-                          if (usuarios[i].idUser == otherUserId) {
-                            setButtonChat(true);
-                            setButtonsAccept(false);
-                            setButtonsAdd(true);
-                            iReceivedInvite = true;
-                            setDisplay("flex");
-                            console.log("i received");
-                            break;
-                          } else {
+                      if (!iSentInvite) {
+                        apiMatch
+                          .get(`/api/v1/PedidoMatch/recebidos/${userId}`)
+                          .then(function (response) {
+                            if (isMounted) {
+                              let usuarios = response.data.data.pedidos;
+                              for (let i = 0; i < usuarios.length; i++) {
+                                if (usuarios[i].idUser == otherUserId) {
+                                  setButtonChat(true);
+                                  setButtonsAccept(false);
+                                  setButtonsAdd(true);
+                                  iReceivedInvite = true;
+                                  setDisplay("flex");
+                                  console.log("i received");
+                                  break;
+                                } else {
+                                  setButtonChat(true);
+                                  setButtonsAccept(true);
+                                  setButtonsAdd(false);
+                                  iReceivedInvite = false;
+                                  setDisplay("flex");
+                                  console.log("i didnt receive");
+                                }
+                              }
+                            }
+                          })
+                          .catch(function (error) {
+                            console.log(error.response.data);
                             setButtonChat(true);
                             setButtonsAccept(true);
                             setButtonsAdd(false);
                             iReceivedInvite = false;
-                            setDisplay("flex");
                             console.log("i didnt receive");
-                          }
-                        }
-                      })
-                      .catch(function (error) {
-                        console.log(error.response.data);
-                        setButtonChat(true);
-                        setButtonsAccept(true);
-                        setButtonsAdd(false);
-                        iReceivedInvite = false;
-                        console.log("i didnt receive");
-                        setDisplay("flex");
-                      });
-                  }
-                });
-            }
-          })
-          .catch(function (error) {
-            console.log(error.response.data);
-          });
+                            setDisplay("flex");
+                          });
+                      }
+                    });
+                }
+              }
+            })
+            .catch(function (error) {
+              console.log(error.response.data);
+            });
+        }
       })
       .catch(function (error) {
         console.log(error.response.data);
       });
+    return () => {
+      isMounted = false;
+    };
   }, [isFocused, isStatus]);
 
   return (

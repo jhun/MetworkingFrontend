@@ -23,19 +23,26 @@ const MetMe = (props) => {
 
   const { user } = props.route.params;
   useEffect(() => {
+    let isMounted = true;
+
     api
       .get(`/api/v1/User/${user}`)
       .then(function (response) {
-        setName(response.data.data.name);
-        setEmail(response.data.data.email);
-        setDescription(response.data.data.description);
-        setCompany(response.data.data.company);
-        setRole(response.data.data.role);
-        setImage(response.data.data.image);
+        if (isMounted) {
+          setName(response.data.data.name);
+          setEmail(response.data.data.email);
+          setDescription(response.data.data.description);
+          setCompany(response.data.data.company);
+          setRole(response.data.data.role);
+          setImage(response.data.data.image);
+        }
       })
       .catch(function (error) {
         console.log(error);
       });
+    return () => {
+      isMounted = false;
+    };
   }, [isStatus]);
 
   const userAtualizar = (id, name, email, description, company, role) => {

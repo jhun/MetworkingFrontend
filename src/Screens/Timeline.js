@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   listItemLabel: {
     width: "150%",
     fontSize: 10,
-    fontWeight: "fontnormal",
+    fontWeight: "normal",
     color: "#ffffff",
     textAlign: "left",
     textTransform: "uppercase",

@@ -15,11 +15,11 @@ import api from "../Services/Axios";
 
 import AuthContext from "../Store/Auth";
 
-const Login = () => {
+const Login = (props) => {
   const [valueEmail, onChangeEmail] = useState("");
   const [valueSenha, onChangeSenha] = useState("");
 
-  const { Login, user, setUser } = useContext(AuthContext);
+  const { LoginMet, user, setUser } = useContext(AuthContext);
 
   const userLogin = (email, senha) => {
     api
@@ -30,14 +30,17 @@ const Login = () => {
       .then(async (res) => {
         if (res.status === 200) {
           console.log("logado");
-          setUser(res.data.data.userId);
-          console.log("usuario: ", res.data.data.userId);
-          Login(res.data.data.userId);
+          LoginMet(res.data.data.userId);
           // props.navigation.navigate("Timeline", { user: res.data.data.userId });
         }
       })
       .catch((error) => {
-        console.log(error.response);
+        console.log(
+          "status: ",
+          error.response["status"],
+          " / error: ",
+          error.response.data
+        );
         if (error.response["status"] === 400) {
           props.navigation.navigate("Login Falhou");
         }

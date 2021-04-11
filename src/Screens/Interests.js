@@ -79,39 +79,47 @@ const Interests = (props) => {
   };
 
   useEffect(() => {
+    let isMounted = true;
     let list;
     let result;
     api
       .get("/api/v1/Interest")
       .then(function (response) {
-        list = response.data.data;
-        // console.log(list);
-        api
-          .get(`/api/v1/UserInterest/User/${user}`)
-          .then(function (response) {
-            let listUserInterest = response.data.data.interests;
-            // console.log(listUserInterest);
-            result = list.map(function (el) {
-              var o = Object.assign({}, el);
-              let isChecked = false;
-              for (let i = 0; i < listUserInterest.length; i++) {
-                if (listUserInterest[i].id == el.id) {
-                  isChecked = true;
-                  break;
-                }
+        if (isMounted) {
+          list = response.data.data;
+          // console.log(list);
+          api
+            .get(`/api/v1/UserInterest/User/${user}`)
+            .then(function (response) {
+              if (isMounted) {
+                let listUserInterest = response.data.data.interests;
+                // console.log(listUserInterest);
+                result = list.map(function (el) {
+                  var o = Object.assign({}, el);
+                  let isChecked = false;
+                  for (let i = 0; i < listUserInterest.length; i++) {
+                    if (listUserInterest[i].id == el.id) {
+                      isChecked = true;
+                      break;
+                    }
+                  }
+                  o.checked = isChecked;
+                  return o;
+                });
+                setListaInteresses(result);
               }
-              o.checked = isChecked;
-              return o;
+            })
+            .catch(function (error) {
+              console.log(error);
             });
-            setListaInteresses(result);
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
+        }
       })
       .catch(function (error) {
         console.log(error);
       });
+    return () => {
+      isMounted = false;
+    };
   }, [isStatus, isFocused]);
   //     api
   //       .get(`/api/v1/User/${user}`)

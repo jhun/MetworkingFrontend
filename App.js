@@ -1,6 +1,6 @@
 // In App.js in a new project
 
-import * as React from "react";
+import React, { useContext, useEffect } from "react";
 import NavigationMetworking from "./src/Navigation";
 
 import {

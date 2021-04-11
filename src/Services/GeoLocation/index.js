@@ -18,7 +18,6 @@ TaskManager.defineTask(LOCATION_TRACKING, async ({ data, error }) => {
     const { locations } = data;
     let lat = locations[0].coords.latitude;
     let long = locations[0].coords.longitude;
-    console.log("aqui: ", { userId: user });
     apiGeo
       .post("/Geolocalizacao", {
         userId: user,

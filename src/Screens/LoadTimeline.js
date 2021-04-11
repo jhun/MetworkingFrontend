@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Text,
   StyleSheet,
@@ -11,6 +11,8 @@ import { useIsFocused } from "@react-navigation/native";
 import { Card, Icon } from "react-native-elements";
 import api from "../Services/Axios";
 import { apiMatch } from "../Services/Axios";
+
+import AuthContext from "../Store/Auth";
 
 const screenWidth = (Dimensions.get("window").width * 100) / 100;
 
@@ -84,7 +86,7 @@ const LoadTimeline = (props) => {
   const changeStatus = () => {
     setStatus(!isStatus);
   };
-  const { user } = props.route.params;
+  const { user } = useContext(AuthContext);
   const [listaUsuarios, setListaUsuarios] = useState("");
   const renderItem = ({ item }) => (
     <Cartao
@@ -100,131 +102,152 @@ const LoadTimeline = (props) => {
   );
 
   useEffect(() => {
+    let isMounted = true;
     console.log("###################################");
     api
       .get("/api/v1/User")
       .then(function (response) {
-        console.log("Tem lista geral");
-        let list = response.data.data;
-        let listCleanUser;
-        apiMatch
-          .get(`/api/v1/Match/${user}`)
-          .then(function (response) {
-            console.log("Tem Match");
-            let listFriends = response.data.data.matches;
-            listCleanUser = list.filter((x) => {
-              return x.id != user;
-            });
-            for (let i = 0; i < listFriends.length; i++) {
-              listCleanUser = listCleanUser.filter((x) => {
-                return x.id != listFriends[i].idAmigo;
-              });
-            }
-            apiMatch
-              .get(`/api/v1/PedidoMatch/enviados/${user}`)
-              .then(function (response) {
-                console.log("Tem pedidos enviados");
-                let listUsersInvited = response.data.data.pedidos;
-                for (let i = 0; i < listUsersInvited.length; i++) {
+        if (isMounted) {
+          console.log("Tem lista geral");
+          let list = response.data.data;
+          let listCleanUser;
+          apiMatch
+            .get(`/api/v1/Match/${user}`)
+            .then(function (response) {
+              if (isMounted) {
+                console.log("Tem Match");
+                listCleanUser = list.filter((x) => {
+                  return x.id != user;
+                });
+                for (let i = 0; i < listFriends.length; i++) {
                   listCleanUser = listCleanUser.filter((x) => {
-                    return x.id != listUsersInvited[i].idUser;
+                    return x.id != listFriends[i].idAmigo;
                   });
                 }
                 apiMatch
-                  .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                  .get(`/api/v1/PedidoMatch/enviados/${user}`)
                   .then(function (response) {
-                    console.log("Tem pedidos recebidos");
-                    let listUsersReceived = response.data.data.pedidos;
-                    for (let i = 0; i < listUsersReceived.length; i++) {
-                      listCleanUser = listCleanUser.filter((x) => {
-                        return x.id != listUsersReceived[i].idUser;
-                      });
+                    if (isMounted) {
+                      console.log("Tem pedidos enviados");
+                      let listUsersInvited = response.data.data.pedidos;
+                      for (let i = 0; i < listUsersInvited.length; i++) {
+                        listCleanUser = listCleanUser.filter((x) => {
+                          return x.id != listUsersInvited[i].idUser;
+                        });
+                      }
+                      apiMatch
+                        .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                        .then(function (response) {
+                          if (isMounted) {
+                            console.log("Tem pedidos recebidos");
+                            let listUsersReceived = response.data.data.pedidos;
+                            for (let i = 0; i < listUsersReceived.length; i++) {
+                              listCleanUser = listCleanUser.filter((x) => {
+                                return x.id != listUsersReceived[i].idUser;
+                              });
+                            }
+                            setListaUsuarios(listCleanUser);
+                          }
+                        })
+                        .catch(function (error) {
+                          console.log("Não tem pedidos recebidos");
+                          setListaUsuarios(listCleanUser);
+                        });
                     }
-                    setListaUsuarios(listCleanUser);
                   })
                   .catch(function (error) {
-                    console.log("Não tem pedidos recebidos");
-                    setListaUsuarios(listCleanUser);
-                  });
-              })
-              .catch(function (error) {
-                console.log("Não tem pedidos enviados");
-                apiMatch
-                  .get(`/api/v1/PedidoMatch/recebidos/${user}`)
-                  .then(function (response) {
-                    console.log("Tem Pedidos recebidos");
-                    let listUsersReceived = response.data.data.pedidos;
-                    for (let i = 0; i < listUsersReceived.length; i++) {
-                      listCleanUser = listCleanUser.filter((x) => {
-                        return x.id != listUsersReceived[i].idUser;
+                    console.log("Não tem pedidos enviados");
+                    apiMatch
+                      .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                      .then(function (response) {
+                        if (isMounted) {
+                          console.log("Tem Pedidos recebidos");
+                          let listUsersReceived = response.data.data.pedidos;
+                          for (let i = 0; i < listUsersReceived.length; i++) {
+                            listCleanUser = listCleanUser.filter((x) => {
+                              return x.id != listUsersReceived[i].idUser;
+                            });
+                          }
+                          setListaUsuarios(listCleanUser);
+                        }
+                      })
+                      .catch(function (error) {
+                        console.log("Não tem Pedidos recebidos");
+                        setListaUsuarios(listCleanUser);
                       });
-                    }
-                    setListaUsuarios(listCleanUser);
-                  })
-                  .catch(function (error) {
-                    console.log("Não tem Pedidos recebidos");
-                    setListaUsuarios(listCleanUser);
                   });
+              }
+            })
+            .catch(function (error) {
+              console.log("Não tem Match");
+              listCleanUser = list.filter((x) => {
+                return x.id != user;
               });
-          })
-          .catch(function (error) {
-            console.log("Não tem Match");
-            listCleanUser = list.filter((x) => {
-              return x.id != user;
+              let listFriends = response.data.data.matches;
+              apiMatch
+                .get(`/api/v1/PedidoMatch/enviados/${user}`)
+                .then(function (response) {
+                  if (isMounted) {
+                    console.log("Tem pedidos enviados");
+                    let listUsersInvited = response.data.data.pedidos;
+                    for (let i = 0; i < listUsersInvited.length; i++) {
+                      listCleanUser = listCleanUser.filter((x) => {
+                        return x.id != listUsersInvited[i].idUser;
+                      });
+                    }
+                    apiMatch
+                      .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                      .then(function (response) {
+                        if (isMounted) {
+                          console.log("Tem pedidos recebidos");
+                          let listUsersReceived = response.data.data.pedidos;
+                          for (let i = 0; i < listUsersReceived.length; i++) {
+                            listCleanUser = listCleanUser.filter((x) => {
+                              return x.id != listUsersReceived[i].idUser;
+                            });
+                          }
+                          setListaUsuarios(listCleanUser);
+                        }
+                      })
+                      .catch(function (error) {
+                        console.log("Não Tem pedidos recebidos");
+                        setListaUsuarios(listCleanUser);
+                      });
+                  }
+                })
+                .catch(function (error) {
+                  console.log("Não tem pedidos enviados");
+                  // console.log(error.response.data.errors.data);
+                  apiMatch
+                    .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                    .then(function (response) {
+                      if (isMounted) {
+                        console.log("Tem pedidos recebidos");
+                        let listUsersReceived = response.data.data.pedidos;
+                        for (let i = 0; i < listUsersReceived.length; i++) {
+                          listCleanUser = listCleanUser.filter((x) => {
+                            return x.id != listUsersReceived[i].idUser;
+                          });
+                        }
+                        setListaUsuarios(listCleanUser);
+                      }
+                    })
+                    .catch(function (error) {
+                      console.log("Não Tem pedidos recebidos");
+                      // console.log(error.response.data.errors.data);
+                      setListaUsuarios(listCleanUser);
+                    });
+                });
             });
-            apiMatch
-              .get(`/api/v1/PedidoMatch/enviados/${user}`)
-              .then(function (response) {
-                console.log("Tem pedidos enviados");
-                let listUsersInvited = response.data.data.pedidos;
-                for (let i = 0; i < listUsersInvited.length; i++) {
-                  listCleanUser = listCleanUser.filter((x) => {
-                    return x.id != listUsersInvited[i].idUser;
-                  });
-                }
-                apiMatch
-                  .get(`/api/v1/PedidoMatch/recebidos/${user}`)
-                  .then(function (response) {
-                    console.log("Tem pedidos recebidos");
-                    let listUsersReceived = response.data.data.pedidos;
-                    for (let i = 0; i < listUsersReceived.length; i++) {
-                      listCleanUser = listCleanUser.filter((x) => {
-                        return x.id != listUsersReceived[i].idUser;
-                      });
-                    }
-                    setListaUsuarios(listCleanUser);
-                  })
-                  .catch(function (error) {
-                    console.log("Não Tem pedidos recebidos");
-                    setListaUsuarios(listCleanUser);
-                  });
-              })
-              .catch(function (error) {
-                console.log("Não tem pedidos enviados");
-                // console.log(error.response.data.errors.data);
-                apiMatch
-                  .get(`/api/v1/PedidoMatch/recebidos/${user}`)
-                  .then(function (response) {
-                    console.log("Tem pedidos recebidos");
-                    let listUsersReceived = response.data.data.pedidos;
-                    for (let i = 0; i < listUsersReceived.length; i++) {
-                      listCleanUser = listCleanUser.filter((x) => {
-                        return x.id != listUsersReceived[i].idUser;
-                      });
-                    }
-                    setListaUsuarios(listCleanUser);
-                  })
-                  .catch(function (error) {
-                    console.log("Não Tem pedidos recebidos");
-                    // console.log(error.response.data.errors.data);
-                    setListaUsuarios(listCleanUser);
-                  });
-              });
-          });
+        }
       })
       .catch(function (error) {
         console.log("Não tem lista geral");
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, [isFocused, isStatus]);
 
   return (
