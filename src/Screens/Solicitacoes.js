@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Text,
   StyleSheet,
@@ -8,14 +8,19 @@ import {
   FlatList,
   View,
 } from "react-native";
+import { showMessage, hideMessage } from "react-native-flash-message";
+import LoadingApp from "../Screens/LoadingApp";
 import { useIsFocused } from "@react-navigation/native";
 import { Card, Icon } from "react-native-elements";
 import api from "../Services/Axios";
 import { apiMatch } from "../Services/Axios";
 
+import AuthContext from "../Store/Auth";
+
 const screenWidth = (Dimensions.get("window").width * 100) / 100;
 
 const Cartao = ({
+  loading,
   mudaStatus,
   navigation,
   idUser,
@@ -34,6 +39,7 @@ const Cartao = ({
     <TouchableOpacity
       style={styles.reject}
       onPress={() => {
+        loading(true);
         apiMatch
           .put(`/api/v1/PedidoMatch/rejeitar`, null, {
             params: {
@@ -44,9 +50,18 @@ const Cartao = ({
           .then(function (response) {
             mudaStatus();
             console.log("pedido rejeitado");
+            loading(false);
+            showMessage({
+              message: "Solicitação rejeitada.",
+            });
           })
           .catch(function (error) {
             console.log(error.response);
+            loading(false);
+            showMessage({
+              message: "Falha ao rejeitar solicitação. tente novamente.",
+              type: "danger",
+            });
           });
       }}
     >
@@ -69,6 +84,7 @@ const Cartao = ({
     <TouchableOpacity
       style={styles.accept}
       onPress={() => {
+        loading(true);
         apiMatch
           .put(`/api/v1/PedidoMatch/aceitar`, null, {
             params: {
@@ -79,9 +95,18 @@ const Cartao = ({
           .then(function (response) {
             mudaStatus();
             console.log("pedido aceito");
+            loading(false);
+            showMessage({
+              message: "Solicitação aceita. Parabés pelo novo Met!",
+            });
           })
           .catch(function (error) {
             console.log(error.response);
+            loading(false);
+            showMessage({
+              message: "Falha ao aceitar a solicitação. Tente novamente.",
+              type: "danger",
+            });
           });
       }}
     >
@@ -91,6 +116,7 @@ const Cartao = ({
 );
 
 const Solicitacoes = (props) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [solicitacoesPendentes, setSolicitacoesPendentes] = useState(null);
   const isFocused = useIsFocused();
   const [isStatus, setStatus] = useState(true);
@@ -98,10 +124,11 @@ const Solicitacoes = (props) => {
     console.log("mudando");
     setStatus(!isStatus);
   };
-  const { user } = props.route.params;
+  const { user } = useContext(AuthContext);
   const [listaUsuarios, setListaUsuarios] = useState("");
   const renderItem = ({ item }) => (
     <Cartao
+      loading={setIsLoading}
       mudaStatus={changeStatus}
       navigation={props.navigation}
       idUser={user}
@@ -140,41 +167,52 @@ const Solicitacoes = (props) => {
                 });
                 setListaUsuarios(listCleanUser);
                 setSolicitacoesPendentes(true);
+                setIsLoading(false);
               }
             })
             .catch(function (error) {
-              console.log("Não tem Solicitacoes");
-              let listCleanUser = {};
-              setListaUsuarios(listCleanUser);
-              setSolicitacoesPendentes(false);
+              if (isMounted) {
+                console.log("Não tem Solicitacoes");
+                let listCleanUser = {};
+                setListaUsuarios(listCleanUser);
+                setSolicitacoesPendentes(false);
+                setIsLoading(false);
+              }
             });
         }
       })
       .catch(function (error) {
-        console.log("Não tem lista geral");
+        if (isMounted) {
+          console.log("Não tem lista geral");
+          setIsLoading(false);
+        }
       });
     return () => {
       isMounted = false;
     };
   }, [isFocused, isStatus]);
 
-  console.log(solicitacoesPendentes);
-  return (
-    <SafeAreaView style={styles.container}>
-      {solicitacoesPendentes ? (
-        <FlatList
-          data={listaUsuarios}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          style={styles.flatView}
-        />
-      ) : (
-        <Text style={styles.header}>
-          Não existem solicitações{"\n"} recebidas pendentes
-        </Text>
-      )}
-    </SafeAreaView>
-  );
+  // console.log(solicitacoesPendentes);
+  if (isLoading) {
+    return <LoadingApp />;
+  } else {
+    return (
+      <SafeAreaView style={styles.container}>
+        {solicitacoesPendentes ? (
+          <FlatList
+            data={listaUsuarios}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            style={styles.flatView}
+          />
+        ) : (
+          <Text style={styles.header}>
+            Não existem solicitações{"\n"} recebidas pendentes
+          </Text>
+        )}
+      </SafeAreaView>
+    );
+  }
 };
 
 const styles = StyleSheet.create({

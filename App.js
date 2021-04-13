@@ -2,6 +2,7 @@
 
 import React, { useContext, useEffect } from "react";
 import NavigationMetworking from "./src/Navigation";
+import FlashMessage from "react-native-flash-message";
 
 import {
   Text,
@@ -21,6 +22,7 @@ function App() {
   return (
     <AuthProvider>
       <NavigationMetworking></NavigationMetworking>
+      <FlashMessage position="top" />
     </AuthProvider>
   );
 }

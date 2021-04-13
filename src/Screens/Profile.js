@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Text,
   TextInput,
@@ -7,15 +7,20 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import { showMessage, hideMessage } from "react-native-flash-message";
+import LoadingApp from "../Screens/LoadingApp";
 import { useIsFocused } from "@react-navigation/native";
 import { Icon } from "react-native-elements";
 import api from "../Services/Axios";
 import { apiMatch } from "../Services/Axios";
 
+import AuthContext from "../Store/Auth";
+
 const Profile = (props, { route, navigation }) => {
   const isFocused = useIsFocused();
+  const [isLoading, setIsLoading] = useState(true);
   const [isStatus, setStatus] = useState(true);
-  const { userId } = props.route.params;
+  const { user } = useContext(AuthContext);
   const { otherUserId } = props.route.params;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -128,7 +133,7 @@ const Profile = (props, { route, navigation }) => {
           setRole(response.data.data.role);
           setImage(response.data.data.image);
           apiMatch
-            .get(`/api/v1/Match/isMatch/${userId}/${otherUserId}`)
+            .get(`/api/v1/Match/isMatch/${user}/${otherUserId}`)
             .then(function (response) {
               if (isMounted) {
                 if (response.data.data.isMatch) {
@@ -136,9 +141,10 @@ const Profile = (props, { route, navigation }) => {
                   setButtonsAccept(true);
                   setButtonsAdd(true);
                   setDisplay("flex");
+                  setIsLoading(false);
                 } else {
                   apiMatch
-                    .get(`/api/v1/PedidoMatch/enviados/${userId}`)
+                    .get(`/api/v1/PedidoMatch/enviados/${user}`)
                     .then(function (response) {
                       if (isMounted) {
                         let usuarios = response.data.data.pedidos;
@@ -149,7 +155,7 @@ const Profile = (props, { route, navigation }) => {
                             setButtonsAdd(true);
                             iSentInvite = true;
                             setDisplay("flex");
-                            console.log("i sent");
+                            console.log("Usuário enviou solicitacao");
                             break;
                           } else {
                             setButtonChat(true);
@@ -157,12 +163,12 @@ const Profile = (props, { route, navigation }) => {
                             setButtonsAdd(false);
                             iSentInvite = false;
                             setDisplay("flex");
-                            console.log("i didnt send");
+                            console.log("Usuário não enviou solicitacao");
                           }
                         }
                         if (!iSentInvite) {
                           apiMatch
-                            .get(`/api/v1/PedidoMatch/recebidos/${userId}`)
+                            .get(`/api/v1/PedidoMatch/recebidos/${user}`)
                             .then(function (response) {
                               if (isMounted) {
                                 let usuarios = response.data.data.pedidos;
@@ -173,7 +179,7 @@ const Profile = (props, { route, navigation }) => {
                                     setButtonsAdd(true);
                                     iReceivedInvite = true;
                                     setDisplay("flex");
-                                    console.log("i received");
+                                    console.log("Usuário recebeu solicitacao");
                                     break;
                                   } else {
                                     setButtonChat(true);
@@ -181,202 +187,262 @@ const Profile = (props, { route, navigation }) => {
                                     setButtonsAdd(false);
                                     iReceivedInvite = false;
                                     setDisplay("flex");
-                                    console.log("i didnt receive");
+                                    console.log(
+                                      "Usuário não recebeu solicitacao"
+                                    );
                                   }
                                 }
+                                setIsLoading(false);
                               }
                             })
                             .catch(function (error) {
-                              console.log(error.response.data);
-                              setButtonChat(true);
-                              setButtonsAccept(true);
-                              setButtonsAdd(false);
-                              iReceivedInvite = false;
-                              console.log("i didnt receive");
-                              setDisplay("flex");
+                              if (isMounted) {
+                                // console.log(error.response.data);
+                                setButtonChat(true);
+                                setButtonsAccept(true);
+                                setButtonsAdd(false);
+                                iReceivedInvite = false;
+                                console.log("Usuário nao recebeu solicitacao");
+                                setDisplay("flex");
+                                setIsLoading(false);
+                              }
                             });
                         }
+                        setIsLoading(false);
                       }
                     })
                     .catch(function (error) {
-                      setButtonChat(true);
-                      setButtonsAccept(true);
-                      setButtonsAdd(false);
-                      iSentInvite = false;
-                      setDisplay("flex");
-                      if (!iSentInvite) {
-                        apiMatch
-                          .get(`/api/v1/PedidoMatch/recebidos/${userId}`)
-                          .then(function (response) {
-                            if (isMounted) {
-                              let usuarios = response.data.data.pedidos;
-                              for (let i = 0; i < usuarios.length; i++) {
-                                if (usuarios[i].idUser == otherUserId) {
-                                  setButtonChat(true);
-                                  setButtonsAccept(false);
-                                  setButtonsAdd(true);
-                                  iReceivedInvite = true;
-                                  setDisplay("flex");
-                                  console.log("i received");
-                                  break;
-                                } else {
-                                  setButtonChat(true);
-                                  setButtonsAccept(true);
-                                  setButtonsAdd(false);
-                                  iReceivedInvite = false;
-                                  setDisplay("flex");
-                                  console.log("i didnt receive");
+                      if (isMounted) {
+                        setButtonChat(true);
+                        setButtonsAccept(true);
+                        setButtonsAdd(false);
+                        iSentInvite = false;
+                        setDisplay("flex");
+                        if (!iSentInvite) {
+                          apiMatch
+                            .get(`/api/v1/PedidoMatch/recebidos/${user}`)
+                            .then(function (response) {
+                              if (isMounted) {
+                                let usuarios = response.data.data.pedidos;
+                                for (let i = 0; i < usuarios.length; i++) {
+                                  if (usuarios[i].idUser == otherUserId) {
+                                    setButtonChat(true);
+                                    setButtonsAccept(false);
+                                    setButtonsAdd(true);
+                                    iReceivedInvite = true;
+                                    setDisplay("flex");
+                                    console.log("Usuário recebeu solicitacao");
+                                    break;
+                                  } else {
+                                    setButtonChat(true);
+                                    setButtonsAccept(true);
+                                    setButtonsAdd(false);
+                                    iReceivedInvite = false;
+                                    setDisplay("flex");
+                                    console.log(
+                                      "Usuário nao recebeu solicitacao"
+                                    );
+                                  }
                                 }
+                                setIsLoading(false);
                               }
-                            }
-                          })
-                          .catch(function (error) {
-                            console.log(error.response.data);
-                            setButtonChat(true);
-                            setButtonsAccept(true);
-                            setButtonsAdd(false);
-                            iReceivedInvite = false;
-                            console.log("i didnt receive");
-                            setDisplay("flex");
-                          });
+                            })
+                            .catch(function (error) {
+                              if (isMounted) {
+                                console.log(error.response.data);
+                                setButtonChat(true);
+                                setButtonsAccept(true);
+                                setButtonsAdd(false);
+                                iReceivedInvite = false;
+                                console.log("Usuário nao recebeu solicitacao");
+                                setDisplay("flex");
+                                setIsLoading(false);
+                              }
+                            });
+                        }
+                        setIsLoading(false);
                       }
                     });
                 }
               }
             })
             .catch(function (error) {
-              console.log(error.response.data);
+              if (isMounted) {
+                console.log("Usuário não é Match do Outro usuário.");
+                // console.log(error.response.data);
+                setIsLoading(false);
+              }
             });
         }
       })
       .catch(function (error) {
-        console.log(error.response.data);
+        if (isMounted) {
+          console.log("Problema ao carregar perfil do usuário.");
+          // console.log(error.response.data);
+          setIsLoading(false);
+          showMessage({
+            message: "Falha ao carregar perfil do usuário. tente novamente.",
+            type: "danger",
+          });
+        }
       });
     return () => {
       isMounted = false;
     };
   }, [isFocused, isStatus]);
 
-  return (
-    <View style={styles.container}>
-      <Image source={{ uri: image }} style={styles.pic} resizeMode="cover" />
-      <Text style={styles.tituloText}>Name</Text>
-      <Text style={styles.input}>{name}</Text>
-      <Text style={styles.tituloText}>About</Text>
-      <Text style={styles.input}>{description}</Text>
-      <Text style={styles.tituloText}>Company</Text>
-      <Text style={styles.input}>{company}</Text>
-      <Text style={styles.tituloText}>Role</Text>
-      <Text style={styles.input}>{role}</Text>
-      {!buttonChat ? (
-        <TouchableOpacity
-          disabled={buttonChat}
-          style={styles.chatBtn}
-          onPress={() => {}}
-        >
-          <Text style={styles.updateText}>CHAT</Text>
-        </TouchableOpacity>
-      ) : null}
-      {!buttonsAdd ? (
-        <TouchableOpacity
-          disabled={buttonsAdd}
-          style={styles.reject}
-          onPress={() => {
-            apiMatch
-              .put(`/api/v1/PedidoMatch/rejeitar`, null, {
-                params: {
-                  IdUserSolicitante: otherUserId,
-                  idUserAprovador: userId,
-                },
-              })
-              .then(function (response) {
-                props.naviganavigation.goBack();
-                mudaStatus();
-                console.log("pedido rejeitado");
-              })
-              .catch(function (error) {
-                console.log(error.response.data);
-              });
-          }}
-        >
-          <Icon size={80} name="close" type="material" color="#cc0088" />
-        </TouchableOpacity>
-      ) : null}
-      {!buttonsAdd ? (
-        <TouchableOpacity
-          disabled={buttonsAdd}
-          style={styles.accept}
-          onPress={() => {
-            apiMatch
-              .post(`/api/v1/PedidoMatch`, {
-                IdUserSolicitante: userId,
-                idUserAprovador: otherUserId,
-              })
-              .then(function (response) {
-                props.navigation.goBack();
-                mudaStatus();
-                console.log("pedido enviado");
-              })
-              .catch(function (error) {
-                console.log(error.response);
-              });
-          }}
-        >
-          <Icon size={80} name="bolt" type="material" color="#ffcc33" />
-        </TouchableOpacity>
-      ) : null}
-      {!buttonsAccept ? (
-        <TouchableOpacity
-          disabled={buttonsAccept}
-          style={styles.reject}
-          onPress={() => {
-            apiMatch
-              .put(`/api/v1/PedidoMatch/rejeitar`, null, {
-                params: {
-                  IdUserSolicitante: otherUserId,
-                  idUserAprovador: userId,
-                },
-              })
-              .then(function (response) {
-                props.navigation.goBack();
-                mudaStatus();
-                console.log("pedido rejeitado");
-              })
-              .catch(function (error) {
-                console.log(error.response.data);
-              });
-          }}
-        >
-          <Icon size={80} name="close" type="material" color="#cc0088" />
-        </TouchableOpacity>
-      ) : null}
-      {!buttonsAccept ? (
-        <TouchableOpacity
-          disabled={buttonsAccept}
-          style={styles.accept}
-          onPress={() => {
-            apiMatch
-              .put(`/api/v1/PedidoMatch/aceitar`, null, {
-                params: {
-                  IdUserSolicitante: otherUserId,
-                  idUserAprovador: userId,
-                },
-              })
-              .then(function (response) {
-                props.navigation.goBack();
-                mudaStatus();
-                console.log("pedido aceito");
-              })
-              .catch(function (error) {
-                console.log(error.response);
-              });
-          }}
-        >
-          <Icon size={80} name="bolt" type="material" color="#ffcc33" />
-        </TouchableOpacity>
-      ) : null}
-    </View>
-  );
+  if (isLoading) {
+    return <LoadingApp />;
+  } else {
+    return (
+      <View style={styles.container}>
+        <Image source={{ uri: image }} style={styles.pic} resizeMode="cover" />
+        <Text style={styles.tituloText}>Name</Text>
+        <Text style={styles.input}>{name}</Text>
+        <Text style={styles.tituloText}>About</Text>
+        <Text style={styles.input}>{description}</Text>
+        <Text style={styles.tituloText}>Company</Text>
+        <Text style={styles.input}>{company}</Text>
+        <Text style={styles.tituloText}>Role</Text>
+        <Text style={styles.input}>{role}</Text>
+        {!buttonChat ? (
+          <TouchableOpacity
+            disabled={buttonChat}
+            style={styles.chatBtn}
+            onPress={() => {}}
+          >
+            <Text style={styles.updateText}>CHAT</Text>
+          </TouchableOpacity>
+        ) : null}
+        {!buttonsAdd ? (
+          <TouchableOpacity
+            disabled={buttonsAdd}
+            style={styles.reject}
+            onPress={() => {
+              apiMatch
+                .put(`/api/v1/PedidoMatch/rejeitar`, null, {
+                  params: {
+                    IdUserSolicitante: otherUserId,
+                    idUserAprovador: user,
+                  },
+                })
+                .then(function (response) {
+                  props.naviganavigation.goBack();
+                  mudaStatus();
+                  console.log("pedido rejeitado");
+                  showMessage({
+                    message: "Solicitação rejeitada.",
+                  });
+                })
+                .catch(function (error) {
+                  console.log(error.response.data);
+                  showMessage({
+                    message: "Falha ao rejeitar solicitação. tente novamente.",
+                    type: "danger",
+                  });
+                });
+            }}
+          >
+            <Icon size={80} name="close" type="material" color="#cc0088" />
+          </TouchableOpacity>
+        ) : null}
+        {!buttonsAdd ? (
+          <TouchableOpacity
+            disabled={buttonsAdd}
+            style={styles.accept}
+            onPress={() => {
+              apiMatch
+                .post(`/api/v1/PedidoMatch`, {
+                  IdUserSolicitante: user,
+                  idUserAprovador: otherUserId,
+                })
+                .then(function (response) {
+                  props.navigation.goBack();
+                  mudaStatus();
+                  console.log("pedido enviado");
+                  showMessage({
+                    message: "Solicitação enviada.",
+                  });
+                })
+                .catch(function (error) {
+                  console.log(error.response);
+                  showMessage({
+                    message: "Erro ao enviar a solicitação. Tente novamente.",
+                    type: "danger",
+                  });
+                });
+            }}
+          >
+            <Icon size={80} name="bolt" type="material" color="#ffcc33" />
+          </TouchableOpacity>
+        ) : null}
+        {!buttonsAccept ? (
+          <TouchableOpacity
+            disabled={buttonsAccept}
+            style={styles.reject}
+            onPress={() => {
+              apiMatch
+                .put(`/api/v1/PedidoMatch/rejeitar`, null, {
+                  params: {
+                    IdUserSolicitante: otherUserId,
+                    idUserAprovador: user,
+                  },
+                })
+                .then(function (response) {
+                  props.navigation.goBack();
+                  mudaStatus();
+                  console.log("pedido rejeitado");
+                  showMessage({
+                    message: "Solicitação rejeitada.",
+                  });
+                })
+                .catch(function (error) {
+                  console.log(error.response.data);
+                  showMessage({
+                    message: "Falha ao rejeitar solicitação. tente novamente.",
+                    type: "danger",
+                  });
+                });
+            }}
+          >
+            <Icon size={80} name="close" type="material" color="#cc0088" />
+          </TouchableOpacity>
+        ) : null}
+        {!buttonsAccept ? (
+          <TouchableOpacity
+            disabled={buttonsAccept}
+            style={styles.accept}
+            onPress={() => {
+              apiMatch
+                .put(`/api/v1/PedidoMatch/aceitar`, null, {
+                  params: {
+                    IdUserSolicitante: otherUserId,
+                    idUserAprovador: user,
+                  },
+                })
+                .then(function (response) {
+                  props.navigation.goBack();
+                  mudaStatus();
+                  console.log("pedido aceito");
+                  showMessage({
+                    message: "Solicitação aceita. Parabés pelo novo Met!",
+                  });
+                })
+                .catch(function (error) {
+                  console.log(error.response);
+                  showMessage({
+                    message: "Falha ao aceitar a solicitação. Tente novamente.",
+                    type: "danger",
+                  });
+                });
+            }}
+          >
+            <Icon size={80} name="bolt" type="material" color="#ffcc33" />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    );
+  }
 };
 
 export default Profile;

@@ -14,18 +14,18 @@ const LoadingApp = (props) => {
     <View style={styles.container}>
       <Image
         style={styles.banner}
-        source={require("../../assets/splash.png")}
+        source={require("../../assets/preloader.gif")}
         resizeMode="contain"
       />
-      <Text style={styles.header}>Carregando...</Text>
+      {/* <Text style={styles.header}>Carregando</Text> */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
+    height: "100%",
+    backgroundColor: "#562b90",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -36,12 +36,11 @@ const styles = StyleSheet.create({
   },
   header: {
     position: "absolute",
-    fontWeight: "bold",
-    fontSize: 16,
+    fontWeight: "normal",
+    fontSize: 12,
     textTransform: "uppercase",
-    color: "#683d76",
-    marginBottom: 10,
-    marginTop: 30,
+    color: "rgba(255,255,255,.4)",
+    top: "65%",
   },
   description: {
     fontSize: 12,

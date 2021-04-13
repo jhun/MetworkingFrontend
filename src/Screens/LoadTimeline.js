@@ -7,6 +7,8 @@ import {
   Dimensions,
   FlatList,
 } from "react-native";
+import { showMessage, hideMessage } from "react-native-flash-message";
+import LoadingApp from "../Screens/LoadingApp";
 import { useIsFocused } from "@react-navigation/native";
 import { Card, Icon } from "react-native-elements";
 import api from "../Services/Axios";
@@ -17,6 +19,7 @@ import AuthContext from "../Store/Auth";
 const screenWidth = (Dimensions.get("window").width * 100) / 100;
 
 const Cartao = ({
+  loading,
   mudaStatus,
   navigation,
   idUser,
@@ -35,6 +38,10 @@ const Cartao = ({
       style={styles.reject}
       onPress={() => {
         mudaStatus();
+        showMessage({
+          message: "Usuário (vai ser) rejeitado.",
+          type: "danger",
+        });
         console.log("rejeitado");
         // navigation.navigate("Mate", {
         //   otherUserId: idFriend,
@@ -61,6 +68,7 @@ const Cartao = ({
     <TouchableOpacity
       style={styles.accept}
       onPress={() => {
+        loading(true);
         apiMatch
           .post(`/api/v1/PedidoMatch`, {
             idUserSolicitante: idUser,
@@ -69,9 +77,18 @@ const Cartao = ({
           .then(function (response) {
             mudaStatus();
             console.log("pedido enviado");
+            loading(false);
+            showMessage({
+              message: "Solicitação enviada.",
+            });
           })
           .catch(function (error) {
             console.log(error);
+            loading(false);
+            showMessage({
+              message: "Erro ao enviar a solicitação. Tente novamente.",
+              type: "danger",
+            });
           });
       }}
     >
@@ -82,6 +99,8 @@ const Cartao = ({
 
 const LoadTimeline = (props) => {
   const isFocused = useIsFocused();
+  const [metExists, setMetExists] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isStatus, setStatus] = useState(true);
   const changeStatus = () => {
     setStatus(!isStatus);
@@ -90,6 +109,7 @@ const LoadTimeline = (props) => {
   const [listaUsuarios, setListaUsuarios] = useState("");
   const renderItem = ({ item }) => (
     <Cartao
+      loading={setIsLoading}
       mudaStatus={changeStatus}
       navigation={props.navigation}
       idUser={user}
@@ -104,161 +124,52 @@ const LoadTimeline = (props) => {
   useEffect(() => {
     let isMounted = true;
     console.log("###################################");
+    console.log(user);
     api
-      .get("/api/v1/User")
+      .get(`/api/v1/User/Timeline/${user}`)
       .then(function (response) {
         if (isMounted) {
           console.log("Tem lista geral");
           let list = response.data.data;
-          let listCleanUser;
-          apiMatch
-            .get(`/api/v1/Match/${user}`)
-            .then(function (response) {
-              if (isMounted) {
-                console.log("Tem Match");
-                listCleanUser = list.filter((x) => {
-                  return x.id != user;
-                });
-                for (let i = 0; i < listFriends.length; i++) {
-                  listCleanUser = listCleanUser.filter((x) => {
-                    return x.id != listFriends[i].idAmigo;
-                  });
-                }
-                apiMatch
-                  .get(`/api/v1/PedidoMatch/enviados/${user}`)
-                  .then(function (response) {
-                    if (isMounted) {
-                      console.log("Tem pedidos enviados");
-                      let listUsersInvited = response.data.data.pedidos;
-                      for (let i = 0; i < listUsersInvited.length; i++) {
-                        listCleanUser = listCleanUser.filter((x) => {
-                          return x.id != listUsersInvited[i].idUser;
-                        });
-                      }
-                      apiMatch
-                        .get(`/api/v1/PedidoMatch/recebidos/${user}`)
-                        .then(function (response) {
-                          if (isMounted) {
-                            console.log("Tem pedidos recebidos");
-                            let listUsersReceived = response.data.data.pedidos;
-                            for (let i = 0; i < listUsersReceived.length; i++) {
-                              listCleanUser = listCleanUser.filter((x) => {
-                                return x.id != listUsersReceived[i].idUser;
-                              });
-                            }
-                            setListaUsuarios(listCleanUser);
-                          }
-                        })
-                        .catch(function (error) {
-                          console.log("Não tem pedidos recebidos");
-                          setListaUsuarios(listCleanUser);
-                        });
-                    }
-                  })
-                  .catch(function (error) {
-                    console.log("Não tem pedidos enviados");
-                    apiMatch
-                      .get(`/api/v1/PedidoMatch/recebidos/${user}`)
-                      .then(function (response) {
-                        if (isMounted) {
-                          console.log("Tem Pedidos recebidos");
-                          let listUsersReceived = response.data.data.pedidos;
-                          for (let i = 0; i < listUsersReceived.length; i++) {
-                            listCleanUser = listCleanUser.filter((x) => {
-                              return x.id != listUsersReceived[i].idUser;
-                            });
-                          }
-                          setListaUsuarios(listCleanUser);
-                        }
-                      })
-                      .catch(function (error) {
-                        console.log("Não tem Pedidos recebidos");
-                        setListaUsuarios(listCleanUser);
-                      });
-                  });
-              }
-            })
-            .catch(function (error) {
-              console.log("Não tem Match");
-              listCleanUser = list.filter((x) => {
-                return x.id != user;
-              });
-              let listFriends = response.data.data.matches;
-              apiMatch
-                .get(`/api/v1/PedidoMatch/enviados/${user}`)
-                .then(function (response) {
-                  if (isMounted) {
-                    console.log("Tem pedidos enviados");
-                    let listUsersInvited = response.data.data.pedidos;
-                    for (let i = 0; i < listUsersInvited.length; i++) {
-                      listCleanUser = listCleanUser.filter((x) => {
-                        return x.id != listUsersInvited[i].idUser;
-                      });
-                    }
-                    apiMatch
-                      .get(`/api/v1/PedidoMatch/recebidos/${user}`)
-                      .then(function (response) {
-                        if (isMounted) {
-                          console.log("Tem pedidos recebidos");
-                          let listUsersReceived = response.data.data.pedidos;
-                          for (let i = 0; i < listUsersReceived.length; i++) {
-                            listCleanUser = listCleanUser.filter((x) => {
-                              return x.id != listUsersReceived[i].idUser;
-                            });
-                          }
-                          setListaUsuarios(listCleanUser);
-                        }
-                      })
-                      .catch(function (error) {
-                        console.log("Não Tem pedidos recebidos");
-                        setListaUsuarios(listCleanUser);
-                      });
-                  }
-                })
-                .catch(function (error) {
-                  console.log("Não tem pedidos enviados");
-                  // console.log(error.response.data.errors.data);
-                  apiMatch
-                    .get(`/api/v1/PedidoMatch/recebidos/${user}`)
-                    .then(function (response) {
-                      if (isMounted) {
-                        console.log("Tem pedidos recebidos");
-                        let listUsersReceived = response.data.data.pedidos;
-                        for (let i = 0; i < listUsersReceived.length; i++) {
-                          listCleanUser = listCleanUser.filter((x) => {
-                            return x.id != listUsersReceived[i].idUser;
-                          });
-                        }
-                        setListaUsuarios(listCleanUser);
-                      }
-                    })
-                    .catch(function (error) {
-                      console.log("Não Tem pedidos recebidos");
-                      // console.log(error.response.data.errors.data);
-                      setListaUsuarios(listCleanUser);
-                    });
-                });
-            });
+          if (list.length === 0) {
+            setMetExists(false);
+          } else {
+            setMetExists(true);
+          }
+          setListaUsuarios(list);
+          setIsLoading(false);
         }
       })
       .catch(function (error) {
-        console.log("Não tem lista geral");
+        if (isMounted) {
+          console.log("Não tem lista geral");
+          setIsLoading(false);
+        }
       });
 
     return () => {
       isMounted = false;
     };
-  }, [isFocused, isStatus]);
+  }, [isStatus, isFocused]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        data={listaUsuarios}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        style={styles.flatView}
-      />
-    </SafeAreaView>
+    <>
+      {isLoading ? <LoadingApp /> : null}
+      <SafeAreaView style={styles.container}>
+        {metExists ? (
+          <FlatList
+            data={listaUsuarios}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            style={styles.flatView}
+          />
+        ) : (
+          <Text style={styles.header}>
+            Não existem Cruzamentos ainda.{"\n"}Bora procurar outros Mets!
+          </Text>
+        )}
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -294,8 +205,10 @@ const styles = StyleSheet.create({
   },
   header: {
     fontWeight: "bold",
-    fontSize: 22,
-    color: "white",
+    fontSize: 15,
+    color: "#6a56a5",
+    marginTop: 50,
+    lineHeight: 25,
     paddingLeft: 10,
     paddingRight: 10,
     paddingBottom: 0,

@@ -7,11 +7,13 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import { showMessage, hideMessage } from "react-native-flash-message";
+import LoadingApp from "../Screens/LoadingApp";
 import api from "../Services/Axios";
 
 const MetMe = (props) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [isStatus, setStatus] = useState(true);
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
@@ -35,10 +37,14 @@ const MetMe = (props) => {
           setCompany(response.data.data.company);
           setRole(response.data.data.role);
           setImage(response.data.data.image);
+          setIsLoading(false);
         }
       })
       .catch(function (error) {
-        console.log(error);
+        if (isMounted) {
+          console.log(error);
+          setIsLoading(false);
+        }
       });
     return () => {
       isMounted = false;
@@ -47,11 +53,12 @@ const MetMe = (props) => {
 
   const userAtualizar = (id, name, email, description, company, role) => {
     console.log(id, name, email, description, company, role);
+    setIsLoading(true);
     api
       .put("/api/v1/User", {
         id: id,
         name: name,
-        email: email,
+        email: email.trim(),
         description: description,
         company: company,
         role: role,
@@ -61,64 +68,77 @@ const MetMe = (props) => {
         if (res.status === 200) {
           props.navigation.navigate("Cadastro Atualizado");
           setStatus(!isStatus);
+          showMessage({
+            message: "Cadastro Atualizado",
+          });
         }
+        setIsLoading(false);
       })
       .catch((error) => {
         console.log(error);
         if (error.response["status"] === 400) {
           props.navigation.navigate("Atualização Cadastro Falhou");
           setStatus(!isStatus);
+          showMessage({
+            message: "Atualização do cadastro falhou",
+            type: "danger",
+          });
         }
+        setIsLoading(false);
       });
   };
 
-  return (
-    <View style={styles.container}>
-      <Image source={{ uri: image }} style={styles.pic} resizeMode="contain" />
-      <Text style={styles.tituloText}>Name</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={(text) => {
-          setName(text);
-        }}
-        value={name}
-      />
-      <Text style={styles.tituloText}>E-mail</Text>
-      <Text style={styles.inputOff}>{email}</Text>
-      <Text style={styles.tituloText}>About</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={(text) => {
-          setDescription(text);
-        }}
-        value={description}
-      />
-      <Text style={styles.tituloText}>Company</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={(text) => {
-          setCompany(text);
-        }}
-        value={company}
-      />
-      <Text style={styles.tituloText}>Role</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={(text) => {
-          setRole(text);
-        }}
-        value={role}
-      />
-      <TouchableOpacity
-        style={styles.updateBtn}
-        onPress={() => {
-          userAtualizar(user, name, email, description, company, role);
-        }}
-      >
-        <Text style={styles.updateText}>Update</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  if (isLoading) {
+    return <LoadingApp />;
+  } else {
+    return (
+      <View style={styles.container}>
+        <Image source={{ uri: image }} style={styles.pic} resizeMode="cover" />
+        <Text style={styles.tituloText}>Name</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={(text) => {
+            setName(text);
+          }}
+          value={name}
+        />
+        <Text style={styles.tituloText}>E-mail</Text>
+        <Text style={styles.inputOff}>{email}</Text>
+        <Text style={styles.tituloText}>About</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={(text) => {
+            setDescription(text);
+          }}
+          value={description}
+        />
+        <Text style={styles.tituloText}>Company</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={(text) => {
+            setCompany(text);
+          }}
+          value={company}
+        />
+        <Text style={styles.tituloText}>Role</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={(text) => {
+            setRole(text);
+          }}
+          value={role}
+        />
+        <TouchableOpacity
+          style={styles.updateBtn}
+          onPress={() => {
+            userAtualizar(user, name, email, description, company, role);
+          }}
+        >
+          <Text style={styles.updateText}>Update</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 };
 
 const styles = StyleSheet.create({
@@ -130,9 +150,10 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   pic: {
-    marginTop: 0,
-    width: "40%",
-    height: "30%",
+    marginTop: 20,
+    marginBottom: 20,
+    width: 150,
+    height: 150,
     borderRadius: 500,
   },
   tituloText: {

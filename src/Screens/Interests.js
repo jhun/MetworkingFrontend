@@ -9,11 +9,14 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { showMessage, hideMessage } from "react-native-flash-message";
+import LoadingApp from "../Screens/LoadingApp";
 import { useIsFocused } from "@react-navigation/native";
 import { CheckBox } from "react-native-elements";
 import api from "../Services/Axios";
 
 const Interests = (props) => {
+  const [isLoading, setIsLoading] = useState(true);
   const isFocused = useIsFocused();
   const [isStatus, setStatus] = useState(true);
 
@@ -29,6 +32,7 @@ const Interests = (props) => {
         checked={checked}
         onPress={() => {
           // toggleChecked(!checked);
+          setIsLoading(true);
           checkAtualizar(user, id, !checked);
         }}
       />
@@ -52,6 +56,9 @@ const Interests = (props) => {
           if (res.status === 200) {
             // console.log("Interesse adicionado");
             setStatus(!isStatus);
+            showMessage({
+              message: "Interesse adicionado",
+            });
           }
         })
         .catch((error) => {
@@ -59,6 +66,10 @@ const Interests = (props) => {
             console.log("Inclusão Interesse Falhou");
             setStatus(!isStatus);
           }
+          showMessage({
+            message: "Inclusão Interesse Falhou",
+            type: "danger",
+          });
         });
     } else {
       api
@@ -67,12 +78,18 @@ const Interests = (props) => {
           if (res.status === 200) {
             // console.log("Interesse excluído");
             setStatus(!isStatus);
+            showMessage({
+              message: "Interesse excluído",
+            });
           }
         })
         .catch((error) => {
           if (error.response["status"] === 400) {
             console.log("Exclusão de interesse falhou");
-            setStatus(!isStatus);
+            showMessage({
+              message: "Exclusão de interesse Falhou",
+              type: "danger",
+            });
           }
         });
     }
@@ -87,6 +104,7 @@ const Interests = (props) => {
       .then(function (response) {
         if (isMounted) {
           list = response.data.data;
+          list.sort((a, b) => (a.name > b.name ? 1 : -1));
           // console.log(list);
           api
             .get(`/api/v1/UserInterest/User/${user}`)
@@ -107,44 +125,52 @@ const Interests = (props) => {
                   return o;
                 });
                 setListaInteresses(result);
+                setIsLoading(false);
+                // showMessage({
+                //   message: "Lista de interesses carregada.",
+                //   type: "success",
+                // });
               }
             })
             .catch(function (error) {
-              console.log(error);
+              if (isMounted) {
+                console.log(error);
+                setIsLoading(false);
+                showMessage({
+                  message: "Erro ao carregar seus interesses.",
+                  type: "danger",
+                });
+              }
             });
         }
       })
       .catch(function (error) {
-        console.log(error);
+        if (isMounted) {
+          console.log(error);
+          setIsLoading(false);
+          showMessage({
+            message: "Erro ao carregar lista de interesses.",
+            type: "danger",
+          });
+        }
       });
     return () => {
       isMounted = false;
     };
   }, [isStatus, isFocused]);
-  //     api
-  //       .get(`/api/v1/User/${user}`)
-  //       .then(function (response) {
-  //         setName(response.data.data.name);
-  //         setEmail(response.data.data.email);
-  //         setDescription(response.data.data.description);
-  //         setCompany(response.data.data.company);
-  //         setRole(response.data.data.role);
-  //         setImage(response.data.data.image);
-  //       })
-  //       .catch(function (error) {
-  //         console.log(error);
-  //       });
-  //   }, [isStatus]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        data={listaInteresses}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        style={styles.flatView}
-      />
-    </SafeAreaView>
+    <>
+      {isLoading ? <LoadingApp /> : null}
+      <SafeAreaView style={styles.container}>
+        <FlatList
+          data={listaInteresses}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          style={styles.flatView}
+        />
+      </SafeAreaView>
+    </>
   );
 };
 

@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
   const LoginMet = async (userId) => {
     await AsyncStorage.setItem("@loggedin", JSON.stringify(true));
     await AsyncStorage.setItem("@userId", JSON.stringify(userId));
+    setUser(userId);
     setLogged(true);
   };
 

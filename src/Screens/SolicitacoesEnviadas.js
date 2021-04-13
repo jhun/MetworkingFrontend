@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Text,
   StyleSheet,
@@ -7,10 +7,14 @@ import {
   Dimensions,
   FlatList,
 } from "react-native";
+import { showMessage, hideMessage } from "react-native-flash-message";
+import LoadingApp from "../Screens/LoadingApp";
 import { useIsFocused } from "@react-navigation/native";
 import { Card, Icon } from "react-native-elements";
 import api from "../Services/Axios";
 import { apiMatch } from "../Services/Axios";
+
+import AuthContext from "../Store/Auth";
 
 const screenWidth = (Dimensions.get("window").width * 100) / 100;
 
@@ -47,6 +51,7 @@ const Cartao = ({
 );
 
 const SolicitacoesEnviadas = (props, { navigation }) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [solicitacoesPendentes, setSolicitacoesPendentes] = useState(null);
   const isFocused = useIsFocused();
   const [isStatus, setStatus] = useState(true);
@@ -54,7 +59,7 @@ const SolicitacoesEnviadas = (props, { navigation }) => {
     console.log("mudando");
     setStatus(!isStatus);
   };
-  const { user } = props.route.params;
+  const { user } = useContext(AuthContext);
   const [listaUsuarios, setListaUsuarios] = useState("");
   const renderItem = ({ item }) => (
     <Cartao
@@ -97,40 +102,51 @@ const SolicitacoesEnviadas = (props, { navigation }) => {
                 });
                 setListaUsuarios(listCleanUser);
                 setSolicitacoesPendentes(true);
+                setIsLoading(false);
               }
             })
             .catch(function (error) {
-              console.log("Não tem pedido solicitacao enviado");
-              let listCleanUser = {};
-              setListaUsuarios(listCleanUser);
-              setSolicitacoesPendentes(false);
+              if (isMounted) {
+                console.log("Não tem pedido solicitacao enviado");
+                let listCleanUser = {};
+                setListaUsuarios(listCleanUser);
+                setSolicitacoesPendentes(false);
+                setIsLoading(false);
+              }
             });
         }
       })
       .catch(function (error) {
-        console.log("Não tem lista geral");
+        if (isMounted) {
+          console.log("Não tem lista geral");
+          setIsLoading(false);
+        }
       });
     return () => {
       isMounted = false;
     };
   }, [isFocused]);
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {solicitacoesPendentes ? (
-        <FlatList
-          data={listaUsuarios}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          style={styles.flatView}
-        />
-      ) : (
-        <Text style={styles.header}>
-          Não existem solicitações{"\n"} enviadas pendentes
-        </Text>
-      )}
-    </SafeAreaView>
-  );
+  if (isLoading) {
+    return <LoadingApp />;
+  } else {
+    return (
+      <SafeAreaView style={styles.container}>
+        {solicitacoesPendentes ? (
+          <FlatList
+            data={listaUsuarios}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            style={styles.flatView}
+          />
+        ) : (
+          <Text style={styles.header}>
+            Não existem solicitações{"\n"} enviadas pendentes
+          </Text>
+        )}
+      </SafeAreaView>
+    );
+  }
 };
 
 const styles = StyleSheet.create({
