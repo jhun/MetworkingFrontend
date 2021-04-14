@@ -42,7 +42,7 @@ export const stopLocationTracking = async () => {
 const startLocationTracking = async () => {
   await Location.startLocationUpdatesAsync(LOCATION_TRACKING, {
     accuracy: Location.Accuracy.Highest,
-    timeInterval: 60000,
+    timeInterval: 5000,
     distanceInterval: 0,
     foregroundService: {
       notificationTitle: "Metworking",

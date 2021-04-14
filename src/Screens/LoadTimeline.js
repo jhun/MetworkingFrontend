@@ -28,6 +28,7 @@ const Cartao = ({
   role,
   company,
   image,
+  deletarUsuario,
 }) => (
   <Card containerStyle={styles.card}>
     <Card.Image style={styles.foto} source={{ uri: image }}></Card.Image>
@@ -75,7 +76,8 @@ const Cartao = ({
             idUserAprovador: idFriend,
           })
           .then(function (response) {
-            mudaStatus();
+            // mudaStatus();
+            deletarUsuario(idFriend);
             console.log("pedido enviado");
             loading(false);
             showMessage({
@@ -102,11 +104,12 @@ const LoadTimeline = (props) => {
   const [metExists, setMetExists] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isStatus, setStatus] = useState(true);
+  const { user } = useContext(AuthContext);
+  const [listaUsuarios, setListaUsuarios] = useState([]);
   const changeStatus = () => {
     setStatus(!isStatus);
   };
-  const { user } = useContext(AuthContext);
-  const [listaUsuarios, setListaUsuarios] = useState("");
+
   const renderItem = ({ item }) => (
     <Cartao
       loading={setIsLoading}
@@ -118,8 +121,19 @@ const LoadTimeline = (props) => {
       role={item.role}
       company={item.company}
       image={item.image}
+      deletarUsuario={removerUsuarioLista}
     />
   );
+
+  const removerUsuarioLista = (idUser) => {
+    const novaLista = listaUsuarios.filter((item) => {
+      return item.id !== idUser;
+    });
+    setListaUsuarios(novaLista);
+    if (novaLista.length == 0) {
+      setMetExists(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
