@@ -132,58 +132,36 @@ const Solicitacoes = (props) => {
       mudaStatus={changeStatus}
       navigation={props.navigation}
       idUser={user}
-      idFriend={item.id}
-      name={item.name}
-      role={item.role}
-      company={item.company}
-      image={item.image}
+      idFriend={item.user.id}
+      name={item.user.name}
+      role={item.user.role}
+      company={item.user.company}
+      image={item.user.image}
     />
   );
 
   useEffect(() => {
     let isMounted = true;
-    api
-      .get("/api/v1/User")
+    let listFriends;
+    apiMatch
+      .get(`/api/v1/PedidoMatch/recebidos/${user}`)
       .then(function (response) {
         if (isMounted) {
-          console.log("Tem lista geral");
-          let list = response.data.data;
-          apiMatch
-            .get(`/api/v1/PedidoMatch/recebidos/${user}`)
-            .then(function (response) {
-              if (isMounted) {
-                // console.log(response.data.data);
-                console.log("tem pedido solicitacao");
-                let listFriends = response.data.data.pedidos;
-                let listCleanUser = list.filter((x) => {
-                  return x.id != user;
-                });
-                listCleanUser = listCleanUser.filter((x) => {
-                  for (let i = 0; i < listFriends.length; i++) {
-                    if (x.id == listFriends[i].idUser) {
-                      return true;
-                    }
-                  }
-                });
-                setListaUsuarios(listCleanUser);
-                setSolicitacoesPendentes(true);
-                setIsLoading(false);
-              }
-            })
-            .catch(function (error) {
-              if (isMounted) {
-                console.log("Não tem Solicitacoes");
-                let listCleanUser = {};
-                setListaUsuarios(listCleanUser);
-                setSolicitacoesPendentes(false);
-                setIsLoading(false);
-              }
-            });
+          // console.log(response.data.data);
+          console.log("tem pedido solicitacao");
+          listFriends = response.data.data.pedidos;
+
+          setListaUsuarios(listFriends);
+          setSolicitacoesPendentes(true);
+          setIsLoading(false);
         }
       })
       .catch(function (error) {
         if (isMounted) {
-          console.log("Não tem lista geral");
+          console.log("Não tem Solicitacoes");
+          listFriends = {};
+          setListaUsuarios(listFriends);
+          setSolicitacoesPendentes(false);
           setIsLoading(false);
         }
       });
@@ -202,7 +180,7 @@ const Solicitacoes = (props) => {
           <FlatList
             data={listaUsuarios}
             renderItem={renderItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.user.id}
             style={styles.flatView}
           />
         ) : (
