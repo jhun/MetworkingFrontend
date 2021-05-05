@@ -36,6 +36,7 @@ const Profile = (props, { route, navigation }) => {
   const [buttonsAccept, setButtonsAccept] = useState(null);
   const [buttonsAdd, setButtonsAdd] = useState(null);
   const [buttonChat, setButtonChat] = useState(null);
+  const [showEmail, setShowEmail] = useState(null);
 
   let iSentInvite = false;
   let iReceivedInvite = false;
@@ -138,6 +139,7 @@ const Profile = (props, { route, navigation }) => {
               if (isMounted) {
                 if (response.data.data.isMatch) {
                   setButtonChat(false);
+                  setShowEmail(false);
                   setButtonsAccept(true);
                   setButtonsAdd(true);
                   setDisplay("flex");
@@ -151,6 +153,7 @@ const Profile = (props, { route, navigation }) => {
                         for (let i = 0; i < usuarios.length; i++) {
                           if (usuarios[i].idUser == otherUserId) {
                             setButtonChat(true);
+                            setShowEmail(true)
                             setButtonsAccept(true);
                             setButtonsAdd(true);
                             iSentInvite = true;
@@ -159,6 +162,7 @@ const Profile = (props, { route, navigation }) => {
                             break;
                           } else {
                             setButtonChat(true);
+                            setShowEmail(true)
                             setButtonsAccept(true);
                             setButtonsAdd(false);
                             iSentInvite = false;
@@ -175,6 +179,7 @@ const Profile = (props, { route, navigation }) => {
                                 for (let i = 0; i < usuarios.length; i++) {
                                   if (usuarios[i].idUser == otherUserId) {
                                     setButtonChat(true);
+                                    setShowEmail(true)
                                     setButtonsAccept(false);
                                     setButtonsAdd(true);
                                     iReceivedInvite = true;
@@ -183,6 +188,7 @@ const Profile = (props, { route, navigation }) => {
                                     break;
                                   } else {
                                     setButtonChat(true);
+                                    setShowEmail(true)
                                     setButtonsAccept(true);
                                     setButtonsAdd(false);
                                     iReceivedInvite = false;
@@ -199,6 +205,7 @@ const Profile = (props, { route, navigation }) => {
                               if (isMounted) {
                                 // console.log(error.response.data);
                                 setButtonChat(true);
+                                setShowEmail(true)
                                 setButtonsAccept(true);
                                 setButtonsAdd(false);
                                 iReceivedInvite = false;
@@ -214,6 +221,7 @@ const Profile = (props, { route, navigation }) => {
                     .catch(function (error) {
                       if (isMounted) {
                         setButtonChat(true);
+                        setShowEmail(true)
                         setButtonsAccept(true);
                         setButtonsAdd(false);
                         iSentInvite = false;
@@ -227,6 +235,7 @@ const Profile = (props, { route, navigation }) => {
                                 for (let i = 0; i < usuarios.length; i++) {
                                   if (usuarios[i].idUser == otherUserId) {
                                     setButtonChat(true);
+                                    setShowEmail(true)
                                     setButtonsAccept(false);
                                     setButtonsAdd(true);
                                     iReceivedInvite = true;
@@ -235,6 +244,7 @@ const Profile = (props, { route, navigation }) => {
                                     break;
                                   } else {
                                     setButtonChat(true);
+                                    setShowEmail(true)
                                     setButtonsAccept(true);
                                     setButtonsAdd(false);
                                     iReceivedInvite = false;
@@ -251,6 +261,7 @@ const Profile = (props, { route, navigation }) => {
                               if (isMounted) {
                                 console.log(error.response.data);
                                 setButtonChat(true);
+                                setShowEmail(true)
                                 setButtonsAccept(true);
                                 setButtonsAdd(false);
                                 iReceivedInvite = false;
@@ -305,11 +316,17 @@ const Profile = (props, { route, navigation }) => {
         <Text style={styles.input}>{company}</Text>
         <Text style={styles.tituloText}>Role</Text>
         <Text style={styles.input}>{role}</Text>
+        {!showEmail ? (
+          <>
+            <Text style={styles.tituloText}>E-mail</Text>
+            <Text style={styles.input}>{email}</Text>
+          </>
+        ) : null}
         {!buttonChat ? (
           <TouchableOpacity
             disabled={buttonChat}
             style={styles.chatBtn}
-            onPress={() => {}}
+            onPress={() => { }}
           >
             <Text style={styles.updateText}>CHAT</Text>
           </TouchableOpacity>
